@@ -15,16 +15,15 @@ namespace MPEGTS
         }
 
         /// <summary>
-        /// ServiceID (program number) -> current event
+        /// MapPID -> current event
         /// </summary>
         public Dictionary<int, EventItem> CurrentEvents { get; set; }  = new Dictionary<int, EventItem>();
 
         /// <summary>
-        /// ServiceID (program number) -> List of events
+        /// MapPID -> List of events
         /// </summary>
         public Dictionary<int, List<EventItem>> ScheduledEvents { get; set; } = new Dictionary<int, List<EventItem>>();
 
-        public Dictionary<int, int> ProgramNumberToMapPID { get; set; } = new Dictionary<int, int>();
 
         public EITScanResult Scan(List<byte> bytes)
         {
@@ -55,86 +54,7 @@ namespace MPEGTS
 
             try
             {
-                var eitData = MPEGTransportStreamPacket.GetAllPacketsPayloadBytesByPID(packets, 18);
-
-                _log.Debug($"EIT packets count: {eitData.Count}");
-
-                var eventIDs = new Dictionary<int, Dictionary<int, EventItem>>(); // ServiceID -> (event id -> event item )
-
-                var currentEventsCountFound = 0;
-                var scheduledEventsCountFound = 0;
-
-                foreach (var kvp in eitData)
-                {
-                    try
-                    {
-                        var eit = DVBTTable.Create<EITTable>(kvp.Value);
-
-                        if (eit == null || !eit.CRCIsValid())
-                            continue;
-
-                        if (eit.ID == 78) // actual TS, present/following event information = table_id = 0x4E;
-                        {
-                            foreach (var item in eit.EventItems)
-                            {
-                                if (item.StartTime < DateTime.Now &&
-                                    item.FinishTime > DateTime.Now)
-                                {
-                                    // reading only the actual event
-                                    // there can be event that start in future!
-
-                                    CurrentEvents[eit.ServiceId] = item;                                    
-
-                                    currentEventsCountFound++;
-
-                                    break; 
-                                }
-                            }
-                        }
-                        else
-                        if (eit.ID >= 80 && eit.ID <= 95) // actual TS, event schedule information = table_id = 0x50 to 0x5F;
-                        {
-                            foreach (var item in eit.EventItems)
-                            {
-                                if (!eventIDs.ContainsKey(eit.ServiceId))
-                                {
-                                    eventIDs[eit.ServiceId] = new Dictionary<int, EventItem>();
-                                }
-
-                                var serviceItems = eventIDs[eit.ServiceId];
-
-                                if (!serviceItems.ContainsKey(item.EventId))
-                                {
-                                    serviceItems.Add(item.EventId, item);
-
-                                    scheduledEventsCountFound++;
-                                }
-                            }
-                        }
-                    }
-                    catch (MPEGTSUnsupportedEncodingException)
-                    {
-                        res.UnsupportedEncoding = true;                    
-                    }
-                    catch (Exception ex)
-                    {
-                        // Bad data EIT data
-                    }
-                }
-
-                _log.Debug($"Scheduled Events found: {scheduledEventsCountFound}");
-                _log.Debug($"Current Events found: {currentEventsCountFound}");
-
-                // transform to List and sorting:
-
-                foreach (var kvp in eventIDs)
-                {
-                    foreach (var eventItem in kvp.Value)
-                    {
-                        AddScheduledEventItem(kvp.Key, eventItem.Value);
-                    }
-                    ScheduledEvents[kvp.Key].Sort();
-                }
+                var programNumberToMapPID = new Dictionary<int, int>();
 
                 var psiTable = DVBTTable.CreateFromPackets<PSITable>(packets, 0);
                 if (psiTable != null && psiTable.ProgramAssociations != null)
@@ -142,31 +62,113 @@ namespace MPEGTS
                     foreach (var kvp in psiTable.ProgramAssociations)
                     {
                         _log.Debug($"Associate  program number {kvp.ProgramNumber} to PID {kvp.ProgramMapPID}");
-                        ProgramNumberToMapPID[kvp.ProgramNumber] = kvp.ProgramMapPID;
+                        programNumberToMapPID[kvp.ProgramNumber] = kvp.ProgramMapPID;
+                    }
+
+                    var eitData = MPEGTransportStreamPacket.GetAllPacketsPayloadBytesByPID(packets, 18);
+
+                    _log.Debug($"EIT packets count: {eitData.Count}");
+
+                    var eventIDs = new Dictionary<int, Dictionary<int, EventItem>>(); // ServiceID -> (event id -> event item )
+
+                    var currentEventsCountFound = 0;
+                    var scheduledEventsCountFound = 0;
+
+                    foreach (var kvp in eitData)
+                    {
+                        try
+                        {
+                            var eit = DVBTTable.Create<EITTable>(kvp.Value);
+
+                            if (eit == null || !eit.CRCIsValid())
+                                continue;
+
+                            if (eit.ID == 78) // actual TS, present/following event information = table_id = 0x4E;
+                            {
+                                foreach (var item in eit.EventItems)
+                                {
+                                    if (item.StartTime < DateTime.Now &&
+                                        item.FinishTime > DateTime.Now)
+                                    {
+                                        // reading only the actual event
+                                        // there can be event that start in future!
+
+                                        CurrentEvents[programNumberToMapPID[eit.ServiceId]] = item;
+
+                                        currentEventsCountFound++;
+
+                                        break;
+                                    }
+                                }
+                            }
+                            else
+                            if (eit.ID >= 80 && eit.ID <= 95) // actual TS, event schedule information = table_id = 0x50 to 0x5F;
+                            {
+                                foreach (var item in eit.EventItems)
+                                {
+                                    if (!eventIDs.ContainsKey(eit.ServiceId))
+                                    {
+                                        eventIDs[eit.ServiceId] = new Dictionary<int, EventItem>();
+                                    }
+
+                                    var serviceItems = eventIDs[eit.ServiceId];
+
+                                    if (!serviceItems.ContainsKey(item.EventId))
+                                    {
+                                        serviceItems.Add(item.EventId, item);
+
+                                        scheduledEventsCountFound++;
+                                    }
+                                }
+                            }
+                        }
+                        catch (MPEGTSUnsupportedEncodingException)
+                        {
+                            res.UnsupportedEncoding = true;
+                        }
+                        catch (Exception ex)
+                        {
+                            // Bad data EIT data
+                        }
+                    }
+
+                    _log.Debug($"Scheduled Events found: {scheduledEventsCountFound}");
+                    _log.Debug($"Current Events found: {currentEventsCountFound}");
+
+                    // transform to List and sorting:
+
+                    foreach (var kvp in eventIDs)
+                    {
+                        foreach (var eventItem in kvp.Value)
+                        {
+                            AddScheduledEventItem(programNumberToMapPID[kvp.Key], eventItem.Value);
+                        }
+                        ScheduledEvents[programNumberToMapPID[kvp.Key]].Sort();
                     }
                 }
                 else
                 {
                     _log.Debug($"No PSI table found");
+                    res.OK = false;
                 }
 
             } catch (Exception e)
             {
                 _log.Error(e);
                 res.OK = false;
-            }            
+            }
 
             return res;
         }
 
-        public void AddScheduledEventItem(int serviceId, EventItem eventItem)
+        public void AddScheduledEventItem(int MapPID, EventItem eventItem)
         {
-            if (!ScheduledEvents.ContainsKey(serviceId))
+            if (!ScheduledEvents.ContainsKey(MapPID))
             {
-                ScheduledEvents[serviceId] = new List<EventItem>();
+                ScheduledEvents[MapPID] = new List<EventItem>();
             }
 
-            foreach (var item in ScheduledEvents[serviceId])
+            foreach (var item in ScheduledEvents[MapPID])
             {
                 if (item.EventId == eventItem.EventId)
                 {
@@ -174,7 +176,7 @@ namespace MPEGTS
                 }
             }
 
-            ScheduledEvents[serviceId].Add(eventItem);
+            ScheduledEvents[MapPID].Add(eventItem);
         }
 
         public EventItem GetEvent(DateTime date, int programMapPID)
@@ -205,26 +207,17 @@ namespace MPEGTS
             foreach (var kvp in CurrentEvents)
             {
                 if (kvp.Value.StartTime <= date &&
-                    kvp.Value.FinishTime >= date &&
-                    ProgramNumberToMapPID.ContainsKey(kvp.Key))
+                    kvp.Value.FinishTime >= date)
                 {
-                    var programMapPID = ProgramNumberToMapPID[kvp.Key];
-
-                    res[programMapPID] = new List<EventItem>();
-                    res[programMapPID].Add(kvp.Value);                    
+                    res[kvp.Key] = new List<EventItem>();
+                    res[kvp.Key].Add(kvp.Value);
                 }
             }
 
-
             // scheduled events
 
-            foreach (var serviceId in ScheduledEvents.Keys)
+            foreach (var programMapPID in ScheduledEvents.Keys)
             {
-                if (!ProgramNumberToMapPID.ContainsKey(serviceId))
-                    continue;
-
-                var programMapPID = ProgramNumberToMapPID[serviceId];
-
                 if (!res.ContainsKey(programMapPID))
                 {
                     res[programMapPID] = new List<EventItem>();
@@ -232,7 +225,7 @@ namespace MPEGTS
 
                 EventItem currentEvent = null;
 
-                foreach (var ev in ScheduledEvents[serviceId])
+                foreach (var ev in ScheduledEvents[programMapPID])
                 {
                     if (ev.StartTime <= date &&
                         ev.FinishTime >= date)
@@ -245,7 +238,7 @@ namespace MPEGTS
                             res[programMapPID].Add(ev);
                             currentEvent = ev;
                         }
-                        else 
+                        else
                         {
                             currentEvent = res[programMapPID][0];
                         }
@@ -255,7 +248,7 @@ namespace MPEGTS
                             break; // second event not wanted
                         }
                     }
-                    
+
                     if (currentEvent != null &&
                         currentEvent.FinishTime == ev.StartTime )
                     {
@@ -264,7 +257,7 @@ namespace MPEGTS
                         break;
                     }
                 }
-            }           
+            }
 
             return res;
         }
