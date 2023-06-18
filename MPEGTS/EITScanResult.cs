@@ -8,5 +8,15 @@ namespace MPEGTS
     {
         public bool OK { get; set; }
         public bool UnsupportedEncoding { get; set; }
+
+        /// <summary>
+        /// MapPID -> current event
+        /// </summary>
+        public Dictionary<int, EventItem> CurrentEvents { get; set; } = new Dictionary<int, EventItem>();
+
+        /// <summary>
+        /// MapPID -> List of events
+        /// </summary>
+        public Dictionary<int, List<EventItem>> ScheduledEvents { get; set; } = new Dictionary<int, List<EventItem>>();
     }
 }

@@ -33,7 +33,7 @@ namespace MPEGTSAnalyzator
                 //AnalyzeMPEGTSPackets("TestData" + Path.DirectorySeparatorChar + "CTS.ts");
                 //AnalyzeMPEGTSPackets("TestData" + Path.DirectorySeparatorChar + "stream.ts");
                 //AnalyzeMPEGTSPackets("TestData" + Path.DirectorySeparatorChar + "PMTs.ts");
-                AnalyzeMPEGTSPackets("TestData" + Path.DirectorySeparatorChar + "stream.ts", true);
+                AnalyzeMPEGTSPackets("TestData" + Path.DirectorySeparatorChar + "ct.ts", true);
 
                 Console.WriteLine("Press Enter");
                 Console.ReadLine();
@@ -136,7 +136,6 @@ namespace MPEGTSAnalyzator
                 }
             }
 
-
             if (includeEIT)
             {
 
@@ -146,7 +145,7 @@ namespace MPEGTSAnalyzator
                     Console.WriteLine($"Event Information Table (EIT):");
                     Console.WriteLine($"------------------------------");
 
-                    var eitManager = new EITManager(logger);
+                    var eitService = new EITService(logger);
 
                     var packetsEITwithSDT = new List<MPEGTransportStreamPacket>();
                     packetsEITwithSDT.AddRange(packetsByPID[18]);
@@ -156,7 +155,7 @@ namespace MPEGTSAnalyzator
                         packetsEITwithSDT.AddRange(packetsByPID[0]);
                     }
 
-                    var eitScanRes = eitManager.Scan(packetsEITwithSDT);
+                    var eitScanRes = eitService.Scan(packetsEITwithSDT);
 
                     if (eitScanRes.UnsupportedEncoding)
                     {
@@ -174,7 +173,7 @@ namespace MPEGTSAnalyzator
                         Console.WriteLine($"{"Program number",14} {"Date".PadRight(10, ' '),10} {"From "}-{" To  "} Text");
                         Console.WriteLine($"{"--------------",14} {"----".PadRight(10, '-'),10} {"-----"}-{"-----"} -------------------------------");
 
-                        foreach (var kvp in eitManager.CurrentEvents)
+                        foreach (var kvp in eitScanRes.CurrentEvents)
                         {
                             Console.WriteLine(kvp.Value.WriteToString());
                         }
@@ -184,23 +183,9 @@ namespace MPEGTSAnalyzator
                         Console.WriteLine("Scheduled events");
                         Console.WriteLine();
 
-                        foreach (var programNumber in eitManager.ScheduledEvents.Keys)
+                        foreach (var programNumber in eitScanRes.ScheduledEvents.Keys)
                         {
-                            foreach (var ev in eitManager.ScheduledEvents[programNumber])
-                            {
-                                Console.WriteLine(ev.WriteToString());
-                            }
-                        }
-
-                        Console.WriteLine();
-                        Console.WriteLine("Present Events");
-                        Console.WriteLine();
-
-                        foreach (var kvp in eitManager.GetEvents(DateTime.Now))
-                        {
-                            Console.WriteLine($"Program Map PID: {kvp.Key}");
-
-                            foreach (var ev in kvp.Value)
+                            foreach (var ev in eitScanRes.ScheduledEvents[programNumber])
                             {
                                 Console.WriteLine(ev.WriteToString());
                             }
