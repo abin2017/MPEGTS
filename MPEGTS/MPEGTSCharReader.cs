@@ -79,9 +79,30 @@ namespace MPEGTS
                 return String.Empty;
             }
 
-            if (bytes[index]<0x20)
+            var characterTableByte = bytes[index];
+
+            if ((characterTableByte > 0) && (characterTableByte < 0x20))
             {
                 // not default encoding
+
+                switch (characterTableByte)
+                {
+                    case 1:
+                        // ISO 8859-5 Latin/Cyrillic alphabet - see table A.2
+                        return System.Text.Encoding.GetEncoding("iso-8859-5").GetString(bytes, index, count);
+                    case 2:
+                        // ISO 8859-6 Latin/Arabic alphabet - see table A.3
+                        return System.Text.Encoding.GetEncoding("iso-8859-6").GetString(bytes, index, count);
+                    case 3:
+                        // ISO 8859-7 Latin/Arabic alphabet - see table A.4
+                        return System.Text.Encoding.GetEncoding("iso-8859-7").GetString(bytes, index, count);
+                    case 4:
+                        // ISO 8859-8 Latin/Arabic alphabet - see table A.5
+                        return System.Text.Encoding.GetEncoding("iso-8859-8").GetString(bytes, index, count);
+                    case 5:
+                        // ISO 8859-9 Latin/Arabic alphabet - see table A.6
+                        return System.Text.Encoding.GetEncoding("iso-8859-9").GetString(bytes, index, count);
+                }
 
                 if (throwErrorWhenUnsupportedEncodingFound)
                 {
