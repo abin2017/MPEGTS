@@ -130,5 +130,29 @@ namespace MPEGTS
                 return FinishTime.ToString("HH:mm");
             }
         }
+
+        public EventItem Clone()
+        {
+            return new EventItem()
+            {
+                EventId = EventId,
+                EventName = EventName,
+                FinishTime = FinishTime,
+                StartTime = StartTime,
+                ServiceId = ServiceId,
+                Text = Text,
+                LanguageCode = LanguageCode
+            };
+        }
+
+        public bool SameEvent(EventItem item)
+        {
+            return
+                item != null &&
+                item.StartTime == StartTime &&
+                item.FinishTime == FinishTime &&
+                item.EventId == EventId &&
+                item.ServiceId == ServiceId;
+        }
     }
 }
