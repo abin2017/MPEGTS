@@ -130,7 +130,10 @@ namespace MPEGTSAnalyzator
                         if (packetsByPID.ContainsKey(kvp.Value))
                         {
                             var mptPacket = DVBTTable.CreateFromPackets<PMTTable>(packetsByPID[kvp.Value], kvp.Value);
-                            mptPacket.WriteToConsole();
+                            if (mptPacket != null)
+                            {
+                                mptPacket.WriteToConsole();
+                            }
                         }
                     }
                 }

@@ -90,6 +90,13 @@ namespace MPEGTS
                 var descriptorLength = bytes[pos + 1];
 
                 var descriptorBytes = new byte[descriptorLength +2];
+
+                if (bytes.Count < pos + descriptorLength + 2)
+                {
+                    Console.WriteLine($"PMT: invalid descriptor");
+                    break;
+                }
+
                 bytes.CopyTo(pos, descriptorBytes, 0, descriptorLength +2);
 
                 if (descriptorTag == 0x59)  // 89
