@@ -85,33 +85,50 @@ namespace MPEGTS
             {
                 // not default encoding
 
+                // first byte determines encoding
+                index++;
+                count--;
+
+                string txt = null;
+
                 switch (characterTableByte)
                 {
                     case 1:
                         // ISO 8859-5 Latin/Cyrillic alphabet - see table A.2
-                        return System.Text.Encoding.GetEncoding("iso-8859-5").GetString(bytes, index, count);
+                        txt = System.Text.Encoding.GetEncoding("iso-8859-5").GetString(bytes, index, count);
+                        break;
                     case 2:
                         // ISO 8859-6 Latin/Arabic alphabet - see table A.3
-                        return System.Text.Encoding.GetEncoding("iso-8859-6").GetString(bytes, index, count);
+                        txt = System.Text.Encoding.GetEncoding("iso-8859-6").GetString(bytes, index, count);
+                        break;
                     case 3:
                         // ISO 8859-7 Latin/Arabic alphabet - see table A.4
-                        return System.Text.Encoding.GetEncoding("iso-8859-7").GetString(bytes, index, count);
+                        txt = System.Text.Encoding.GetEncoding("iso-8859-7").GetString(bytes, index, count);
+                        break;
                     case 4:
                         // ISO 8859-8 Latin/Arabic alphabet - see table A.5
-                        return System.Text.Encoding.GetEncoding("iso-8859-8").GetString(bytes, index, count);
+                        txt = System.Text.Encoding.GetEncoding("iso-8859-8").GetString(bytes, index, count);
+                        break;
                     case 5:
                         // ISO 8859-9 Latin/Arabic alphabet - see table A.6
-                        return System.Text.Encoding.GetEncoding("iso-8859-9").GetString(bytes, index, count);
-                }
-
-                if (throwErrorWhenUnsupportedEncodingFound)
-                {
-                    throw new MPEGTSUnsupportedEncodingException();
+                        txt = System.Text.Encoding.GetEncoding("iso-8859-9").GetString(bytes, index, count);
+                        break;
+                    default:
+                        if (throwErrorWhenUnsupportedEncodingFound)
+                        {
+                            throw new MPEGTSUnsupportedEncodingException();
+                        }
+                        break;
                 }
 
                 if (bytes[index] == 0x14)
                 {
                     // Big5 subset of ISO/IEC 10646 [16] Traditional Chinese
+                }
+
+                if (txt != null)
+                {
+                    return txt;
                 }
 
                 return String.Empty;
