@@ -3,12 +3,12 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Title>.NET MPEG transport stream library</Title> 
+    <Title>.NET MPEG transport stream library</Title>
     <RepositoryUrl>https://github.com/petrj/NugetLibrary</RepositoryUrl>
     <Description>.NET MPEG transport stream library</Description>	<PackageProjectUrl>https://github.com/petrj/MPEGTS</PackageProjectUrl>
-    <AssemblyVersion>1.0.0.4</AssemblyVersion>
-    <FileVersion>1.0.0.4</FileVersion>
-    <PackageVersion>1.0.4</PackageVersion>
+    <AssemblyVersion>1.0.0.5</AssemblyVersion>
+    <FileVersion>1.0.0.5</FileVersion>
+    <PackageVersion>1.0.5</PackageVersion>
     <Authors>Petr Janousek</Authors>
   </PropertyGroup>
 
@@ -17,6 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="LoggerService" Version="1.0.0" />
+    <PackageReference Include="LoggerService" Version="1.0.4" />
   </ItemGroup>
 </Project>
