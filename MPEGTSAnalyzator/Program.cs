@@ -33,7 +33,7 @@ namespace MPEGTSAnalyzator
                 //AnalyzeMPEGTSPackets("TestData" + Path.DirectorySeparatorChar + "CTS.ts");
                 //AnalyzeMPEGTSPackets("TestData" + Path.DirectorySeparatorChar + "stream.ts");
                 //AnalyzeMPEGTSPackets("TestData" + Path.DirectorySeparatorChar + "PMTs.ts");
-                AnalyzeMPEGTSPackets("TestData" + Path.DirectorySeparatorChar + "DBMux24.ts", true);
+                AnalyzeMPEGTSPackets("TestData.CZ" + Path.DirectorySeparatorChar + "CT2.ts", true);
 
                 Console.WriteLine("Press Enter");
                 Console.ReadLine();

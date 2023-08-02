@@ -22,41 +22,31 @@ namespace MPEGTS
 
         public List<byte> Payload { get; set; } = new List<byte>();
 
-        public void WriteToConsole()
+        public static void WriteByteArrayToConsole(byte[] bytes)
         {
-            Console.WriteLine($"Sync Byte: {Convert.ToChar(SyncByte)} ({SyncByte.ToString()})");
-            Console.WriteLine($"PID      : {PID}");
-            Console.WriteLine($"TransportErrorIndicator  : {TransportErrorIndicator}");
-            Console.WriteLine($"PayloadUnitStartIndicator: {PayloadUnitStartIndicator}");
-            Console.WriteLine($"TransportPriority        : {TransportPriority}");
-
-            Console.WriteLine($"ScramblingControl        : {ScramblingControl}");
-            Console.WriteLine($"AdaptationFieldControl   : {AdaptationFieldControl}");
-
-            Console.WriteLine($"ContinuityCounter        : {ContinuityCounter}");
-
             var sb = new StringBuilder();
             var sbc = new StringBuilder();
             var sbb = new StringBuilder();
             int c = 0;
             int row = 0;
 
-            for (var i=0;i<Payload.Count;i++)
+            for (var i = 0; i < bytes.Length; i++)
             {
-                sbb.Append($"{Convert.ToString(Payload[i], 2).PadLeft(8, '0'),9} ");
-                sb.Append($"{Payload[i].ToString(), 9} ");
+                sbb.Append($"{Convert.ToString(bytes[i], 2).PadLeft(8, '0'),9} ");
+                sb.Append($"{bytes[i].ToString(),9} ");
 
 
-                if (Payload[i] >= 32 && Payload[i] <= 128)
+                if (bytes[i] >= 32 && bytes[i] <= 128)
                 {
-                    sbc.Append($"{Convert.ToChar(Payload[i]), 9} ");
-                } else
+                    sbc.Append($"{Convert.ToChar(bytes[i]),9} ");
+                }
+                else
                 {
                     sbc.Append($"{"",9} ");
                 }
                 c++;
 
-                if (c>=10)
+                if (c >= 10)
                 {
                     Console.WriteLine(sbb.ToString());
                     Console.WriteLine(sb.ToString());
@@ -74,6 +64,22 @@ namespace MPEGTS
             Console.WriteLine(sb.ToString());
             Console.WriteLine(sbc.ToString());
             Console.WriteLine();
+        }
+
+        public void WriteToConsole()
+        {
+            Console.WriteLine($"Sync Byte: {Convert.ToChar(SyncByte)} ({SyncByte.ToString()})");
+            Console.WriteLine($"PID      : {PID}");
+            Console.WriteLine($"TransportErrorIndicator  : {TransportErrorIndicator}");
+            Console.WriteLine($"PayloadUnitStartIndicator: {PayloadUnitStartIndicator}");
+            Console.WriteLine($"TransportPriority        : {TransportPriority}");
+
+            Console.WriteLine($"ScramblingControl        : {ScramblingControl}");
+            Console.WriteLine($"AdaptationFieldControl   : {AdaptationFieldControl}");
+
+            Console.WriteLine($"ContinuityCounter        : {ContinuityCounter}");
+
+            WriteByteArrayToConsole(Payload.ToArray());
         }
         public static string WriteBytesToString(List<byte> bytes)
         {

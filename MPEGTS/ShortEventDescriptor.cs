@@ -36,6 +36,15 @@ namespace MPEGTS
 
             res.Text = MPEGTSCharReader.ReadString(bytes, pos, textLength, true);
 
+            if (res.EventName.Contains("pitaval"))
+            {
+                // TODO: too short Text!
+
+                Console.WriteLine("-----------------------------------------------");
+                MPEGTransportStreamPacket.WriteByteArrayToConsole(bytes);
+                Console.WriteLine("-----------------------------------------------");
+            }
+
             return res;
         }
     }
