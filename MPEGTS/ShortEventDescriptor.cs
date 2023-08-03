@@ -6,25 +6,22 @@ namespace MPEGTS
 {
     public class ShortEventDescriptor : EventDescriptor
     {
-        public byte Tag { get; set; }
-        public byte Length { get; set; }
-
         public string LanguageCode { get; set; }
         public string EventName { get; set; }
         public string Text { get; set; }
 
-        public static ShortEventDescriptor Parse(byte[] bytes)
+        public static ShortEventDescriptor Parse(byte[] bytes, int startPos = 0)
         {
             var res = new ShortEventDescriptor();
 
-            res.Tag = bytes[0];
-            res.Length = bytes[1];
+            res.Tag = bytes[startPos+0];
+            res.Length = bytes[startPos+1];
 
-            res.LanguageCode = Encoding.GetEncoding("iso-8859-1").GetString(bytes, 2, 3);
+            res.LanguageCode = Encoding.GetEncoding("iso-8859-1").GetString(bytes, startPos+2, 3);
 
-            var eventNameLength = bytes[5];
+            var eventNameLength = bytes[startPos+5];
 
-            var pos = 6;
+            var pos = startPos + 6;
 
             res.EventName = MPEGTSCharReader.ReadString(bytes, pos, eventNameLength, true);
 
@@ -35,15 +32,6 @@ namespace MPEGTS
             pos++;
 
             res.Text = MPEGTSCharReader.ReadString(bytes, pos, textLength, true);
-
-            if (res.EventName.Contains("pitaval"))
-            {
-                // TODO: too short Text!
-
-                Console.WriteLine("-----------------------------------------------");
-                MPEGTransportStreamPacket.WriteByteArrayToConsole(bytes);
-                Console.WriteLine("-----------------------------------------------");
-            }
 
             return res;
         }

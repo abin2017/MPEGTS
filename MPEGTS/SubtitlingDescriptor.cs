@@ -12,10 +12,10 @@ namespace MPEGTS
         {
             var pos = 0;
 
-            var descriptorTag = bytes[pos + 0];
-            var descriptorLength = bytes[pos + 1];
+            Tag = bytes[pos + 0];
+            Length = bytes[pos + 1];
 
-            if (descriptorTag != 89)
+            if (Tag != 89)
                 return;
 
             pos += 2;

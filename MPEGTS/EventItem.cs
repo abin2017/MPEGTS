@@ -78,6 +78,14 @@ namespace MPEGTS
             return res;
         }
 
+        public void AppendExtendedDescriptor(ExtendedEventDescriptor descriptor)
+        {
+            if (descriptor == null)
+                return;
+
+            Text += descriptor.Text;
+        }
+
         public double Progress
         {
             get

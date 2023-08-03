@@ -11,6 +11,7 @@ namespace MPEGTS
         // 79     0x4F event_information_section - other_transport_stream, present/following
         // 80-95  0x50 to 0x5F event_information_section - actual_transport_stream, schedule
         // 96-111 0x60 to 0x6F event_information_section - other_transport_stream, schedule
+        // https://www.etsi.org/deliver/etsi_en/300400_300499/300468/01.11.01_60/en_300468v011101p.pdf
 
         public int ServiceId { get; set; }
         public int TransportStreamID { get; set; }
@@ -102,25 +103,61 @@ namespace MPEGTS
                 var running_status = (bytes[pos + 0] & 224) >> 5;
                 var freeCAMode = (bytes[pos + 0] & 16) >> 4;
 
-                var descriptorLength = ((bytes[pos + 0] & 15) << 8) + bytes[pos + 1];
+                var allDescriptorsLength = ((bytes[pos + 0] & 15) << 8) + bytes[pos + 1];
 
                 pos = pos + 2;
 
-                var descriptorData = new byte[descriptorLength];
-                bytes.CopyTo(pos, descriptorData, 0, descriptorLength);
+                var allDescriptorsData = new byte[allDescriptorsLength];
+                bytes.CopyTo(pos, allDescriptorsData, 0, allDescriptorsLength);
 
-                var descriptorTag = descriptorData[0];
-                if (descriptorTag == 77)
+                var allDescriptorsPos = 0;
+
+
+                ShortEventDescriptor shortEventDescriptor = null;
+                var extendedEventDescriptors = new SortedDictionary<int, ExtendedEventDescriptor> ();
+
+                //Console.WriteLine("--------EIT---------------------------------------");
+                //MPEGTransportStreamPacket.WriteByteArrayToConsole(allDescriptorsData);
+                //Console.WriteLine("--------EIT---------------------------------------");
+
+                while (allDescriptorsPos+1 <= allDescriptorsLength)
                 {
-                    var shortDescriptor = ShortEventDescriptor.Parse(descriptorData);
-                    var eventItem = EventItem.Create(eventId, ServiceId, startTime, finishTime, shortDescriptor);
-                    EventItems.Add(eventItem);
-                } else
-                {
-                    // TODO: read other descriptors
+                    var descriptorTag = allDescriptorsData[allDescriptorsPos];
+                    if (descriptorTag == 77)
+                    {
+                        shortEventDescriptor = ShortEventDescriptor.Parse(allDescriptorsData, allDescriptorsPos);
+                        allDescriptorsPos += shortEventDescriptor.Length + 2;
+                    }
+                    else if (descriptorTag == 78)
+                    {
+                        var extendedEventDescriptor = ExtendedEventDescriptor.Parse(allDescriptorsData, allDescriptorsPos);
+                        extendedEventDescriptors[extendedEventDescriptor.DescriptorNumber] = extendedEventDescriptor;
+                        allDescriptorsPos += extendedEventDescriptor.Length + 2;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"EIT: unknown tag descriptor: {descriptorTag:X} hex ({descriptorTag} dec)");
+
+                        var unknownDescriptorLength = allDescriptorsData[allDescriptorsPos + 1];
+                        allDescriptorsPos += unknownDescriptorLength + 2;
+                    }
                 }
 
-                pos = pos + descriptorLength;
+
+                if (shortEventDescriptor != null)
+                {
+                    var eventItem = EventItem.Create(eventId, ServiceId, startTime, finishTime, shortEventDescriptor);
+
+                    if (extendedEventDescriptors.Count > 0)
+                    {
+                        foreach (var kvp in extendedEventDescriptors)
+                        {
+                            eventItem.AppendExtendedDescriptor(kvp.Value);
+                        }
+                    }
+
+                    EventItems.Add(eventItem);
+                }
             }
         }
 
