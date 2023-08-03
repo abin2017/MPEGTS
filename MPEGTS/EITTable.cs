@@ -172,11 +172,6 @@ namespace MPEGTS
                         }
                     }
 
-                    if (contentDescriptor != null)
-                    {
-                        eventItem.Content = contentDescriptor;
-                    }
-
                     EventItems.Add(eventItem);
                 }
 
