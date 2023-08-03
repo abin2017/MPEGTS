@@ -112,14 +112,9 @@ namespace MPEGTS
 
                 var allDescriptorsPos = 0;
 
-
                 ShortEventDescriptor shortEventDescriptor = null;
                 ContentDescriptor contentDescriptor = null;
                 var extendedEventDescriptors = new SortedDictionary<int, ExtendedEventDescriptor> ();
-
-                //Console.WriteLine("--------EIT---------------------------------------");
-                //MPEGTransportStreamPacket.WriteByteArrayToConsole(allDescriptorsData);
-                //Console.WriteLine("--------EIT---------------------------------------");
 
                 while (allDescriptorsPos+1 <= allDescriptorsLength)
                 {
@@ -142,7 +137,23 @@ namespace MPEGTS
                     }
                     else
                     {
-                        Console.WriteLine($"EIT: unknown tag descriptor: {descriptorTag:X} hex ({descriptorTag} dec)");
+                        if (descriptorTag == 0x50)
+                        {
+                            // Component descriptor
+                        }
+                        else
+                        if (descriptorTag == 0x69)
+                        {
+                            // PDC descriptor
+                        } else
+                        if (descriptorTag == 0x55)
+                        {
+                            // Parental rating descriptor
+                        }
+                        else
+                        {
+                            Console.WriteLine($"EIT: unknown tag descriptor: {descriptorTag:X} hex ({descriptorTag} dec)");
+                        }
 
                         var unknownDescriptorLength = allDescriptorsData[allDescriptorsPos + 1];
                         allDescriptorsPos += unknownDescriptorLength + 2;
@@ -161,8 +172,15 @@ namespace MPEGTS
                         }
                     }
 
+                    if (contentDescriptor != null)
+                    {
+                        eventItem.Content = contentDescriptor;
+                    }
+
                     EventItems.Add(eventItem);
                 }
+
+                pos += allDescriptorsPos;
             }
         }
 

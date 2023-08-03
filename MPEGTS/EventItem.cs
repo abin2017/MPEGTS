@@ -9,6 +9,8 @@ namespace MPEGTS
         public DateTime StartTime { get; set; }
         public DateTime FinishTime { get; set; }
 
+        public ContentDescriptor Content { get; set; } = null;
+
         public int EventId { get; set; }
         public int ServiceId { get; set; }
 

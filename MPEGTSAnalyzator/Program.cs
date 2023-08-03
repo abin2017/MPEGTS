@@ -12,10 +12,11 @@ namespace MPEGTSAnalyzator
         public static void Main(string[] args)
         {
             if (args != null &&
-                args.Length == 1 &&
-                File.Exists(args[0]))
+                args.Length >= 0 &&
+                FileNameParamValue(args) != null)
             {
-                AnalyzeMPEGTSPackets(args[0]);
+                var fName = FileNameParamValue(args);
+                AnalyzeMPEGTSPackets(fName, EITParamValue(args));
             }
             else
             {
@@ -24,15 +25,11 @@ namespace MPEGTSAnalyzator
                 Console.WriteLine();
                 Console.WriteLine("Usage:");
                 Console.WriteLine();
-                Console.WriteLine("MPEGTSAnalyzator.exe file.ts");
+                Console.WriteLine("MPEGTSAnalyzator.exe file.ts [--eit]");
                 Console.WriteLine();
                 Console.WriteLine();
 
 #if DEBUG
-                //AnalyzeMPEGTSPackets("TestData" + Path.DirectorySeparatorChar + "PID_768_16_17_00.ts");
-                //AnalyzeMPEGTSPackets("TestData" + Path.DirectorySeparatorChar + "CTS.ts");
-                //AnalyzeMPEGTSPackets("TestData" + Path.DirectorySeparatorChar + "stream.ts");
-                //AnalyzeMPEGTSPackets("TestData" + Path.DirectorySeparatorChar + "PMTs.ts");
                 AnalyzeMPEGTSPackets("TestData.CZ" + Path.DirectorySeparatorChar + "CT2.ts", true);
 
                 Console.WriteLine("Press Enter");
@@ -40,6 +37,32 @@ namespace MPEGTSAnalyzator
 #endif
 
             }
+        }
+
+        public static bool EITParamValue(string[] args)
+        {
+            foreach (string arg in args)
+            {
+                if (arg.ToLower() == "--eit")
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static string FileNameParamValue(string[] args)
+        {
+            foreach (string arg in args)
+            {
+                if (arg.ToLower() != "--eit")
+                {
+                    return arg;
+                }
+            }
+
+            return null;
         }
 
         public static void AnalyzeMPEGTSPackets(string path, bool includeEIT = true)
@@ -180,7 +203,6 @@ namespace MPEGTSAnalyzator
                         {
                             Console.WriteLine(kvp.Value.WriteToString());
                         }
-
 
                         Console.WriteLine();
                         Console.WriteLine("Scheduled events");
