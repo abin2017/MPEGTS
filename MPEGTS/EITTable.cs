@@ -114,6 +114,7 @@ namespace MPEGTS
 
 
                 ShortEventDescriptor shortEventDescriptor = null;
+                ContentDescriptor contentDescriptor = null;
                 var extendedEventDescriptors = new SortedDictionary<int, ExtendedEventDescriptor> ();
 
                 //Console.WriteLine("--------EIT---------------------------------------");
@@ -123,16 +124,21 @@ namespace MPEGTS
                 while (allDescriptorsPos+1 <= allDescriptorsLength)
                 {
                     var descriptorTag = allDescriptorsData[allDescriptorsPos];
-                    if (descriptorTag == 77)
+                    if (descriptorTag == 0x4D)
                     {
                         shortEventDescriptor = ShortEventDescriptor.Parse(allDescriptorsData, allDescriptorsPos);
                         allDescriptorsPos += shortEventDescriptor.Length + 2;
                     }
-                    else if (descriptorTag == 78)
+                    else if (descriptorTag == 0x4E)
                     {
                         var extendedEventDescriptor = ExtendedEventDescriptor.Parse(allDescriptorsData, allDescriptorsPos);
                         extendedEventDescriptors[extendedEventDescriptor.DescriptorNumber] = extendedEventDescriptor;
                         allDescriptorsPos += extendedEventDescriptor.Length + 2;
+                    }
+                    else if (descriptorTag == 0x54)
+                    {
+                        contentDescriptor = ContentDescriptor.Parse(allDescriptorsData, allDescriptorsPos);
+                        allDescriptorsPos += contentDescriptor.Length + 2;
                     }
                     else
                     {
@@ -142,7 +148,6 @@ namespace MPEGTS
                         allDescriptorsPos += unknownDescriptorLength + 2;
                     }
                 }
-
 
                 if (shortEventDescriptor != null)
                 {
