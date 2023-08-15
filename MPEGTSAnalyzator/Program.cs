@@ -30,7 +30,7 @@ namespace MPEGTSAnalyzator
                 Console.WriteLine();
 
 #if DEBUG
-                AnalyzeMPEGTSPackets("TestData.CZ" + Path.DirectorySeparatorChar + "CT2.ts", true);
+                AnalyzeMPEGTSPackets("TestData.CZ" + Path.DirectorySeparatorChar + "DVBT-MPEGTS-514MHz-2023-08-15-23-13-38.ts", false);
 
                 Console.WriteLine("Press Enter");
                 Console.ReadLine();
