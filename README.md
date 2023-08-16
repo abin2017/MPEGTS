@@ -8,5 +8,6 @@ Supported packets:
 - PMT (Program Mapping Table)
 - NIT (Network Information Table)
 - EIT (Event Information Table)
+- TDT (Time and Date Table)
 
 
