@@ -116,6 +116,18 @@ namespace MPEGTSAnalyzator
                     niTable.WriteToConsole();
             }
 
+            if (packetsByPID.ContainsKey(20))
+            {
+                Console.WriteLine();
+                Console.WriteLine($"Time and Date Table (TDT):");
+                Console.WriteLine($"--------------------------------");
+
+                var tdtTable = DVBTTable.CreateFromPackets<TDTTable>(packetsByPID[20], 20);
+
+                if (tdtTable != null)
+                    tdtTable.WriteToConsole();
+            }
+
             if (packetsByPID.ContainsKey(0))
             {
                 Console.WriteLine();
