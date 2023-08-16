@@ -4,6 +4,7 @@ using System.IO;
 using MPEGTS;
 using LoggerService;
 using System.Text;
+using System.Security.Cryptography;
 
 namespace MPEGTSAnalyzator
 {
@@ -158,19 +159,17 @@ namespace MPEGTSAnalyzator
                 {
                     Console.WriteLine($"{kvp.Key.ServiceName.PadRight(40, ' ')} {kvp.Key.ProgramNumber,14} {kvp.Value,8}");
 
-                    if (packetsByPID.ContainsKey(Convert.ToInt32(kvp.Value)))
-                    {
-                        // stream contains this Map PID
+                    // stream contains this Map PID
 
-                        if (packetsByPID.ContainsKey(kvp.Value))
+                    if (packetsByPID.ContainsKey(kvp.Value))
+                    {
+                        var mptPacket = DVBTTable.CreateFromPackets<PMTTable>(packetsByPID[kvp.Value], kvp.Value);
+                        if (mptPacket != null)
                         {
-                            var mptPacket = DVBTTable.CreateFromPackets<PMTTable>(packetsByPID[kvp.Value], kvp.Value);
-                            if (mptPacket != null)
-                            {
-                                mptPacket.WriteToConsole();
-                            }
+                            mptPacket.WriteToConsole();
                         }
                     }
+
                 }
             }
 

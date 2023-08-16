@@ -27,12 +27,14 @@ namespace MPEGTS
             var sb = new StringBuilder();
             var sbc = new StringBuilder();
             var sbb = new StringBuilder();
+            var sbh = new StringBuilder();
             int c = 0;
             int row = 0;
 
             for (var i = 0; i < bytes.Length; i++)
             {
                 sbb.Append($"{Convert.ToString(bytes[i], 2).PadLeft(8, '0'),9} ");
+                sbh.Append($"{("0x"+Convert.ToString(bytes[i], 16)).PadLeft(8, ' ').ToUpper(),9} ");
                 sb.Append($"{bytes[i].ToString(),9} ");
 
 
@@ -48,19 +50,22 @@ namespace MPEGTS
 
                 if (c >= 10)
                 {
-                    Console.WriteLine(sbb.ToString());
+                    Console.WriteLine(sbb.ToString()+"  "+((row+1)*10).ToString().PadLeft(3));
+                    Console.WriteLine(sbh.ToString());
                     Console.WriteLine(sb.ToString());
                     Console.WriteLine(sbc.ToString());
                     Console.WriteLine();
                     sb.Clear();
                     sbb.Clear();
                     sbc.Clear();
+                    sbh.Clear();
 
                     c = 0;
                     row++;
                 }
             }
             Console.WriteLine(sbb.ToString());
+            Console.WriteLine(sbh.ToString());
             Console.WriteLine(sb.ToString());
             Console.WriteLine(sbc.ToString());
             Console.WriteLine();

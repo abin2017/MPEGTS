@@ -93,25 +93,27 @@ namespace MPEGTS
 
                 if (bytes.Count < pos + descriptorLength + 2)
                 {
-                    Console.WriteLine($"PMT: invalid descriptor");
-                    break;
+                    // invalid descriptor length - skipping reading descriptors
                 }
-
-                bytes.CopyTo(pos, descriptorBytes, 0, descriptorLength +2);
-
-                if (descriptorTag == 0x59)  // 89
+                else
                 {
-                    // subtitling_descriptor - see section 6.2.41
-                    stream.SubtitleDescriptor.Parse(descriptorBytes);
-                } else
-                if (descriptorTag == 0xA)  // 10
-                {
-                    stream.LangugeAndAudioType = MPEGTSCharReader.ReadString(descriptorBytes, 2, descriptorLength, false);
+                    bytes.CopyTo(pos, descriptorBytes, 0, descriptorLength + 2);
 
-                } else
-                {
-                    // TODO - read other descriptors
-                    Console.WriteLine($"PMT: unknown tag descriptor: {descriptorTag:X} hex ({descriptorTag} dec)");
+                    if (descriptorTag == 0x59)  // 89
+                    {
+                        // subtitling_descriptor - see section 6.2.41
+                        stream.SubtitleDescriptor.Parse(descriptorBytes);
+                    }
+                    else
+                    if (descriptorTag == 0xA)  // 10
+                    {
+                        stream.LangugeAndAudioType = MPEGTSCharReader.ReadString(descriptorBytes, 2, descriptorLength, false);
+                    }
+                    else
+                    {
+                        // TODO - read other descriptors
+                        //Console.WriteLine($"PMT: unknown tag descriptor: {descriptorTag:X} hex ({descriptorTag} dec)");
+                    }
                 }
 
                 pos += stream.ESInfoLength;

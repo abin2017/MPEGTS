@@ -50,7 +50,7 @@ namespace MPEGTS
             return null;
         }
 
-        public static List<T> CreateAllFromPackets<T>(List<MPEGTransportStreamPacket> packets, long PID, int tableId) where T : DVBTTable, new()
+        public static List<T> CreateAllFromPackets<T>(List<MPEGTransportStreamPacket> packets, long PID, int tableId = -1) where T : DVBTTable, new()
         {
             var res = new List<T>();
 
@@ -66,12 +66,12 @@ namespace MPEGTS
 
                     if (t.CRCIsValid())
                     {
-                        if (t.ID == tableId)
+                        if (tableId == -1 || t.ID == tableId)
                         {
                             res.Add(t);
                         } else
                         {
-                            // not SDT table
+                            // different table
                         }
                     }
 
