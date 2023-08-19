@@ -6,9 +6,9 @@
     <Title>.NET MPEG transport stream library</Title>
     <RepositoryUrl>https://github.com/petrj/NugetLibrary</RepositoryUrl>
     <Description>.NET MPEG transport stream library</Description>	<PackageProjectUrl>https://github.com/petrj/MPEGTS</PackageProjectUrl>
-    <AssemblyVersion>1.0.0.8</AssemblyVersion>
-    <FileVersion>1.0.0.8</FileVersion>
-    <PackageVersion>1.0.8</PackageVersion>
+    <AssemblyVersion>1.0.0.10</AssemblyVersion>
+    <FileVersion>1.0.0.10</FileVersion>
+    <PackageVersion>1.0.10</PackageVersion>
     <Authors>Petr Janousek</Authors>
   </PropertyGroup>
 

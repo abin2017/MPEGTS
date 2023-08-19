@@ -27,7 +27,8 @@ namespace MPEGTS
 
             ID = bytes[pos];
 
-            if (ID != 0x70)
+            if (! (ID == 0x70 ||  // Time and Date Table
+                  ID == 0x73))    // Time Offset Table
                 return;
 
             SectionSyntaxIndicator = ((bytes[pos + 1] & 128) == 128);
