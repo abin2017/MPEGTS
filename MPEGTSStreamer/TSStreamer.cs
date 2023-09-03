@@ -100,15 +100,15 @@ namespace MPEGTSStreamer
                         lastSpeedCalculationTime = DateTime.Now;
 
                         var bitsPerSec = (bufferSize * 5.0) * 8;
-                        speedAndPosition = $"{Convert.ToInt32(totalBytesRead / (fs.Length / 100.00))}% ";
+                        speedAndPosition = $"{Math.Round(totalBytesRead / (fs.Length / 100.00),2)}% ";
 
                         if (bitsPerSec > 1000000)
                         {
-                            speedAndPosition += $" {Convert.ToInt32((bitsPerSec / 1000000.0)).ToString("N0")} Mb/sec";
+                            speedAndPosition += $" {Math.Round((bitsPerSec / 1000000.0),2).ToString("N2")} Mb/sec";
                         }
                         else if (bitsPerSec > 1000)
                         {
-                            speedAndPosition += $" {Convert.ToInt32((bitsPerSec / 1000.0)).ToString("N0")} Kb/sec";
+                            speedAndPosition += $" {Math.Round((bitsPerSec / 1000.0),2).ToString("N2")} Kb/sec";
                         }
                         else
                         {
@@ -137,7 +137,7 @@ namespace MPEGTSStreamer
                             var tdtTable = DVBTTable.CreateFromPackets<TDTTable>(packets, 20);
                             if (tdtTable != null && tdtTable.UTCTime != DateTime.MinValue)
                             {
-                                _loggingService.Debug($" .. !!!!!!!! TDT table time: {tdtTable.UTCTime}");
+                                //_loggingService.Debug($" .. !!!!!!!! TDT table time: {tdtTable.UTCTime}");
 
                                 if (timeShift == TimeSpan.MinValue)
                                 {
@@ -147,10 +147,15 @@ namespace MPEGTSStreamer
                                 {
                                     var expectedTime = tdtTable.UTCTime.Add(timeShift);
                                     var timeDiff = DateTime.Now - expectedTime;
-                                    _loggingService.Debug($" .. timeDiff: {timeDiff.TotalMilliseconds} ms");
+                                    //_loggingService.Debug($" .. timeDiff: {timeDiff.TotalMilliseconds} ms");
 
                                     if (timeDiff.TotalMilliseconds > 0)
                                     {
+                                        // how many bytes is coresponding to time shift:
+                                        // bufferSize ~ bytes read in 1/5 of sec
+                                        var bytesPer5SecsDiff = (timeDiff.TotalSeconds / 5) * bufferSize;
+
+
                                         // increasing buffer size
                                         bufferSize = Convert.ToInt32(bufferSize * 1.2);
                                         if (bufferSize > MaxBufferSize)
@@ -174,7 +179,7 @@ namespace MPEGTSStreamer
                                         }
                                         else
                                         {
-                                            _loggingService.Debug($" .. <<< desreasing buffer size to: {bufferSize / 1000} KB [{timeDiff.TotalMilliseconds}]");
+                                            _loggingService.Debug($" .. <<< decreasing buffer size to: {bufferSize / 1000} KB [{timeDiff.TotalMilliseconds}]");
                                         }
                                     }
                                 }
