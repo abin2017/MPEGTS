@@ -1,0 +1,194 @@
+﻿using System;
+using System.IO;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading;
+using LoggerService;
+using MPEGTS;
+
+namespace MPEGTSStreamer
+{
+    public class TSStreamer
+    {
+        public IPEndPoint _endPoint { get; set; }
+
+        public const int MaxUDPPacketSize = 1400;
+        private const int MinBufferSize = 50;      // ~  2 kb/s 
+        private const int MaxBufferSize = 1250000; // ~ 50 Mb/s
+
+        private UdpClient _UDPClient = null;
+        private ILoggingService _loggingService = new BasicLoggingService();
+
+        public TSStreamer(ILoggingService loggingService)
+        {
+            _loggingService = loggingService;
+
+            _UDPClient = new UdpClient();
+        }
+
+        /// <summary>
+        /// Setting EndPoint from string "IP:Port"
+        /// </summary>
+        /// <param name="ipAndPort">Ip and port.</param>
+        public void SetEndpoint(string ipAndPort)
+        {
+            _loggingService.Info($"Setting IP and port: {ipAndPort}");
+
+
+            var ipPort = ipAndPort.Split(':');
+            _endPoint = new IPEndPoint(IPAddress.Parse(ipPort[0]), Convert.ToInt32(ipPort[1]));
+        }
+
+        private void SendByteArray(byte[] array, int count)
+        {
+            try
+            {
+                if (_UDPClient == null || _endPoint == null)
+                    return;
+
+                if (array != null && count > 0)
+                {
+                    var bufferPart = new byte[MaxUDPPacketSize];
+                    var bufferPartSize = 0;
+                    var bufferPos = 0;
+
+                    while (bufferPos < count)
+                    {
+                        if (bufferPos + MaxUDPPacketSize <= count)
+                        {
+                            bufferPartSize = MaxUDPPacketSize;
+                        }
+                        else
+                        {
+                            bufferPartSize = count - bufferPos;
+                        }
+
+                        Buffer.BlockCopy(array, bufferPos, bufferPart, 0, bufferPartSize);
+                        _UDPClient.Send(bufferPart, bufferPartSize, _endPoint);
+                        bufferPos += bufferPartSize;
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _loggingService.Error(ex);
+            }
+        }
+
+        public void Stream(string fileName, double initialMegaBitsSpeed = 4.0)
+        {
+            _loggingService.Info($"Streaming file: {fileName}");
+
+            var bufferSize = Convert.ToInt32((initialMegaBitsSpeed*1000000/8)/5); 
+
+            var buffer = new byte[MaxBufferSize];
+            var lastSpeedCalculationTime = DateTime.MinValue;
+            var lastSpeedCalculationTimeLog = DateTime.MinValue;
+            var speedAndPosition = "";
+            var timeShift = TimeSpan.MinValue;
+
+            using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+            {
+                var totalBytesRead = 0;
+                while (fs.CanRead && totalBytesRead < fs.Length)
+                {
+                    if ((DateTime.Now - lastSpeedCalculationTime).TotalMilliseconds > 200)
+                    {
+                        // calculate speed & progress
+
+                        lastSpeedCalculationTime = DateTime.Now;
+
+                        var bitsPerSec = (bufferSize * 5.0) * 8;
+                        speedAndPosition = $"{Convert.ToInt32(totalBytesRead / (fs.Length / 100.00))}% ";
+
+                        if (bitsPerSec > 1000000)
+                        {
+                            speedAndPosition += $" {Convert.ToInt32((bitsPerSec / 1000000.0)).ToString("N0")} Mb/sec";
+                        }
+                        else if (bitsPerSec > 1000)
+                        {
+                            speedAndPosition += $" {Convert.ToInt32((bitsPerSec / 1000.0)).ToString("N0")} Kb/sec";
+                        }
+                        else
+                        {
+                            speedAndPosition += $" {bitsPerSec} b/sec";
+                        }
+
+                        var bytesRead = fs.Read(buffer, 0, bufferSize);
+
+                        totalBytesRead += bytesRead;
+
+                        speedAndPosition += $" (time for parse & send: { (DateTime.Now - lastSpeedCalculationTime).TotalMilliseconds} ms)";
+
+
+                        SendByteArray(buffer, bytesRead);
+
+
+                        // calculating buffer size for balancing bitrate
+
+                        if (bytesRead > 0)
+                        {
+
+                            var this5SecBytes = new byte[bytesRead];
+                            Buffer.BlockCopy(buffer, 0, this5SecBytes, 0, bytesRead);
+
+                            var packets = MPEGTransportStreamPacket.Parse(this5SecBytes);
+                            var tdtTable = DVBTTable.CreateFromPackets<TDTTable>(packets, 20);
+                            if (tdtTable != null && tdtTable.UTCTime != DateTime.MinValue)
+                            {
+                                _loggingService.Debug($" .. !!!!!!!! TDT table time: {tdtTable.UTCTime}");
+
+                                if (timeShift == TimeSpan.MinValue)
+                                {
+                                    timeShift = DateTime.Now - tdtTable.UTCTime;
+                                }
+                                else
+                                {
+                                    var expectedTime = tdtTable.UTCTime.Add(timeShift);
+                                    var timeDiff = DateTime.Now - expectedTime;
+                                    _loggingService.Debug($" .. timeDiff: {timeDiff.TotalMilliseconds} ms");
+
+                                    if (timeDiff.TotalMilliseconds > 0)
+                                    {
+                                        // increasing buffer size
+                                        bufferSize = Convert.ToInt32(bufferSize * 1.2);
+                                        if (bufferSize > MaxBufferSize)
+                                        {
+                                            _loggingService.Debug($" .. cannot increase buffer size!");
+                                            bufferSize = MaxBufferSize;
+                                        }
+                                        else
+                                        {
+                                            _loggingService.Debug($" .. >>> increasing buffer size to: {bufferSize / 1000} KB  [{timeDiff.TotalMilliseconds}]");
+                                        }
+                                    }
+                                    else if (timeDiff.TotalMilliseconds < 0)
+                                    {
+                                        // decreasing buffer size
+                                        bufferSize = Convert.ToInt32(bufferSize * 0.8);
+                                        if (bufferSize < MinBufferSize)
+                                        {
+                                            _loggingService.Debug($" .. cannot decrease buffer size!");
+                                            bufferSize = MinBufferSize;
+                                        }
+                                        else
+                                        {
+                                            _loggingService.Debug($" .. <<< desreasing buffer size to: {bufferSize / 1000} KB [{timeDiff.TotalMilliseconds}]");
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if ((DateTime.Now - lastSpeedCalculationTimeLog).TotalMilliseconds > 1000)
+                    {
+                        lastSpeedCalculationTimeLog = DateTime.Now;
+                        _loggingService.Debug($"Streaming data: {speedAndPosition}");
+                    }
+                }
+            }
+        }
+    }
+}

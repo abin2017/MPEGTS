@@ -48,7 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MPEGTS\MPEGTS.csproj">
-      <Project>{21353C2B-4A82-431A-B1C5-CA57E87685EA}</Project>
+      <Project>{375CB1E6-D769-4A8F-9B2E-5BFE5B97046E}</Project>
       <Name>MPEGTS</Name>
     </ProjectReference>
   </ItemGroup>
