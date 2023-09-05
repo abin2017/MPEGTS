@@ -96,11 +96,55 @@ namespace MPEGTSStreamer
             return speedAndPosition;
         }
 
+        private int FindSyncBytePosition(FileStream fs)
+        {
+            if (!fs.CanRead)
+                return -1;
+
+            if (fs.Length<188*2)
+                return -1;
+
+            var buff = new byte[188*2];
+            var bytesRead = fs.Read(buff, 0, 188*2);
+
+            if (bytesRead<188*2)
+                return -1;
+
+            var pos = 0;
+
+            while (pos < 188)
+            {
+                if (
+                        (buff[pos] == MPEGTransportStreamPacket.MPEGTSSyncByte) &&
+                        (buff[pos+188] == MPEGTransportStreamPacket.MPEGTSSyncByte)
+                   )
+                {
+                    fs.Position = pos;
+                    return pos;
+
+                }
+            }
+
+            return -1;
+        }
+
+        private int GetCorrectedBufferSize(int bufferSize)
+        {
+            // divisible by 188
+            while (bufferSize % 188 != 0)
+            {
+                bufferSize++;
+            }
+
+            return bufferSize;
+        }
+
+
         public void Stream(string fileName, double initialMegaBitsSpeed = 4.0)
         {
             _loggingService.Info($"Streaming file: {fileName}");
 
-            var bufferSize = Convert.ToInt32((initialMegaBitsSpeed*1000000/8)/5);
+            var bufferSize = GetCorrectedBufferSize(Convert.ToInt32((initialMegaBitsSpeed*1000000/8)/5));
 
             var buffer = new byte[MaxBufferSize];
             var lastSpeedCalculationTime = DateTime.MinValue;
@@ -111,6 +155,10 @@ namespace MPEGTSStreamer
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
             {
+                // TODO: find FindSyncBytePosition
+
+                FindSyncBytePosition(fs);
+
                 var totalBytesRead = 0;
                 while (fs.CanRead && totalBytesRead < fs.Length)
                 {
@@ -166,10 +214,12 @@ namespace MPEGTSStreamer
                                             if (newBufferSize > MaxBufferSize)
                                             {
                                                 _loggingService.Debug($" .. cannot increase buffer size to {newBufferSize} KB!");
+                                                newBufferSize = MaxBufferSize;
                                             }
                                             else if (newBufferSize < MinBufferSize)
                                             {
                                                 _loggingService.Debug($" .. cannot decrease buffer size to {newBufferSize} KB!");
+                                                newBufferSize = MinBufferSize;
                                             }
                                             else
                                             {
@@ -183,7 +233,7 @@ namespace MPEGTSStreamer
                                                     _loggingService.Debug($" .. <<< decreasing buffer size to: {bufferSize / 1024} KB  [timeDiff: {timeDiff.TotalMilliseconds}]");
                                                 }
 
-                                                bufferSize = newBufferSize;
+                                                bufferSize = GetCorrectedBufferSize(newBufferSize);
                                             }
                                         }
                                     }
