@@ -12,8 +12,8 @@ namespace MPEGTSStreamer
     {
         public IPEndPoint _endPoint { get; set; }
 
-        public const int MaxUDPPacketSize = 1400;
-        private const int MinBufferSize = 50;      // ~  2 kb/s 
+        public const int UDPMTU = 1316;            // MTU => Maximum Transmission Unit (UDP mtu is limited in VLC 3.0 to 1316)
+        private const int MinBufferSize = 50;      // ~  2 kb/s
         private const int MaxBufferSize = 1250000; // ~ 50 Mb/s
 
         private UdpClient _UDPClient = null;
@@ -48,15 +48,15 @@ namespace MPEGTSStreamer
 
                 if (array != null && count > 0)
                 {
-                    var bufferPart = new byte[MaxUDPPacketSize];
+                    var bufferPart = new byte[UDPMTU];
                     var bufferPartSize = 0;
                     var bufferPos = 0;
 
                     while (bufferPos < count)
                     {
-                        if (bufferPos + MaxUDPPacketSize <= count)
+                        if (bufferPos + UDPMTU <= count)
                         {
-                            bufferPartSize = MaxUDPPacketSize;
+                            bufferPartSize = UDPMTU;
                         }
                         else
                         {
@@ -80,7 +80,7 @@ namespace MPEGTSStreamer
         {
             _loggingService.Info($"Streaming file: {fileName}");
 
-            var bufferSize = Convert.ToInt32((initialMegaBitsSpeed*1000000/8)/5); 
+            var bufferSize = Convert.ToInt32((initialMegaBitsSpeed*1000000/8)/5);
 
             var buffer = new byte[MaxBufferSize];
             var lastSpeedCalculationTime = DateTime.MinValue;
