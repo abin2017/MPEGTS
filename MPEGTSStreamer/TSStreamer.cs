@@ -139,7 +139,7 @@ namespace MPEGTSStreamer
                             var tdtTable = DVBTTable.CreateFromPackets<TDTTable>(packets, 20);
                             if (tdtTable != null && tdtTable.UTCTime != DateTime.MinValue)
                             {
-                                //_loggingService.Debug($" .. !!!!!!!! TDT table time: {tdtTable.UTCTime}");
+                                _loggingService.Debug($" .. !!!!!!!! TDT table time: {tdtTable.UTCTime}");
 
                                 if (timeShift == TimeSpan.MinValue)
                                 {
@@ -178,7 +178,7 @@ namespace MPEGTSStreamer
                                                     _loggingService.Debug($" .. >>> increasing buffer size to: {bufferSize / 1024} KB  [timeDiff: {timeDiff.TotalMilliseconds}]");
                                                 }
                                                 else
-                                                if (newBufferSize > bufferSize)
+                                                if (newBufferSize < bufferSize)
                                                 {
                                                     _loggingService.Debug($" .. <<< decreasing buffer size to: {bufferSize / 1024} KB  [timeDiff: {timeDiff.TotalMilliseconds}]");
                                                 }
