@@ -32,7 +32,7 @@ namespace MPEGTSStreamer
         /// <param name="ipAndPort">Ip and port.</param>
         public void SetEndpoint(string ipAndPort)
         {
-            _loggingService.Info($"Setting IP and port: {ipAndPort}");
+            _loggingService.Info($"Setting streaming url: udp://@{ipAndPort}");
 
 
             var ipPort = ipAndPort.Split(':');
@@ -139,6 +139,52 @@ namespace MPEGTSStreamer
             return bufferSize;
         }
 
+        private int CalculateNewBufferSize(int bufferSize, TimeSpan timeShift, DateTime TDTTime, DateTime lastTDTTime)
+        {
+            var expectedTime = TDTTime.Add(timeShift);
+            var timeDiff = DateTime.Now - expectedTime;
+
+            if (timeDiff.TotalMilliseconds != 0)
+            {
+                var timeSpanFromLastTDT = DateTime.Now - lastTDTTime;
+                if (timeSpanFromLastTDT.TotalSeconds > 1)
+                {
+                    var missingBytes = (timeDiff.TotalSeconds / 5.0) * bufferSize;
+                    var bytesTransferedFromLastTDT = (timeSpanFromLastTDT.TotalSeconds / 5.0) * bufferSize;
+
+                    var bytesTransferedFromLastTDTWithMissingBytes = bytesTransferedFromLastTDT + missingBytes;
+
+                    var newBufferSize = Convert.ToInt32(bytesTransferedFromLastTDTWithMissingBytes / (timeSpanFromLastTDT.TotalSeconds / 5));
+
+                    if (newBufferSize > MaxBufferSize)
+                    {
+                        _loggingService.Debug($" .. cannot increase buffer size to {newBufferSize} KB!");
+                        bufferSize = GetCorrectedBufferSize(MaxBufferSize);
+                    }
+                    else if (newBufferSize < MinBufferSize)
+                    {
+                        _loggingService.Debug($" .. cannot decrease buffer size to {newBufferSize} KB!");
+                        bufferSize = GetCorrectedBufferSize(MinBufferSize);
+                    }
+                    else
+                    {
+                        if (newBufferSize > bufferSize)
+                        {
+                            _loggingService.Debug($" .. >>> increasing buffer size to: {bufferSize / 1024} KB  [timeDiff: {timeDiff.TotalMilliseconds}]");
+                        }
+                        else
+                        if (newBufferSize < bufferSize)
+                        {
+                            _loggingService.Debug($" .. <<< decreasing buffer size to: {bufferSize / 1024} KB  [timeDiff: {timeDiff.TotalMilliseconds}]");
+                        }
+
+                        bufferSize = GetCorrectedBufferSize(newBufferSize);
+                    }
+                }
+            }
+
+            return bufferSize;
+        }
 
         public void Stream(string fileName, double initialMegaBitsSpeed = 4.0)
         {
@@ -155,8 +201,6 @@ namespace MPEGTSStreamer
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
             {
-                // TODO: find FindSyncBytePosition
-
                 FindSyncBytePosition(fs);
 
                 var totalBytesRead = 0;
@@ -196,47 +240,7 @@ namespace MPEGTSStreamer
                                 }
                                 else
                                 {
-                                    var expectedTime = tdtTable.UTCTime.Add(timeShift);
-                                    var timeDiff = DateTime.Now - expectedTime;
-
-                                    if (timeDiff.TotalMilliseconds != 0)
-                                    {
-                                        var timeSpanFromLastTDT = DateTime.Now - lastTDTTime;
-                                        if (timeSpanFromLastTDT.TotalSeconds > 1)
-                                        {
-                                            var missingBytes = (timeDiff.TotalSeconds / 5.0) * bufferSize;
-                                            var bytesTransferedFromLastTDT = (timeSpanFromLastTDT.TotalSeconds / 5.0) * bufferSize;
-
-                                            var bytesTransferedFromLastTDTWithMissingBytes = bytesTransferedFromLastTDT + missingBytes;
-
-                                            var newBufferSize = Convert.ToInt32(bytesTransferedFromLastTDTWithMissingBytes / (timeSpanFromLastTDT.TotalSeconds / 5));
-
-                                            if (newBufferSize > MaxBufferSize)
-                                            {
-                                                _loggingService.Debug($" .. cannot increase buffer size to {newBufferSize} KB!");
-                                                newBufferSize = MaxBufferSize;
-                                            }
-                                            else if (newBufferSize < MinBufferSize)
-                                            {
-                                                _loggingService.Debug($" .. cannot decrease buffer size to {newBufferSize} KB!");
-                                                newBufferSize = MinBufferSize;
-                                            }
-                                            else
-                                            {
-                                                if (newBufferSize > bufferSize)
-                                                {
-                                                    _loggingService.Debug($" .. >>> increasing buffer size to: {bufferSize / 1024} KB  [timeDiff: {timeDiff.TotalMilliseconds}]");
-                                                }
-                                                else
-                                                if (newBufferSize < bufferSize)
-                                                {
-                                                    _loggingService.Debug($" .. <<< decreasing buffer size to: {bufferSize / 1024} KB  [timeDiff: {timeDiff.TotalMilliseconds}]");
-                                                }
-
-                                                bufferSize = GetCorrectedBufferSize(newBufferSize);
-                                            }
-                                        }
-                                    }
+                                    bufferSize = CalculateNewBufferSize(bufferSize, timeShift, tdtTable.UTCTime, lastTDTTime);
                                 }
 
                                 lastTDTTime = DateTime.Now;
