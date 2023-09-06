@@ -120,13 +120,23 @@ namespace MPEGTSAnalyzator
             if (packetsByPID.ContainsKey(20))
             {
                 Console.WriteLine();
-                Console.WriteLine($"Time and Date Table (TDT):");
+                Console.WriteLine($"First/last Time and Date Table (TDT):");
                 Console.WriteLine($"--------------------------------");
 
-                var tdtTable = DVBTTable.CreateFromPackets<TDTTable>(packetsByPID[20], 20);
+                var tdtTables = DVBTTable.CreateAllFromPackets<TDTTable>(packetsByPID[20], 20);
 
-                if (tdtTable != null)
-                    tdtTable.WriteToConsole();
+                if (tdtTables != null &&
+                    tdtTables.Count > 0)
+                {
+                    var first = tdtTables[0];
+                    var last = tdtTables[tdtTables.Count - 1];
+
+                    first.WriteToConsole();
+                    last.WriteToConsole();
+
+                    var timeSpan = last.UTCTime - first.UTCTime;
+                    Console.WriteLine($"TimeSpan: {timeSpan.ToString()}");
+                }
             }
 
             if (packetsByPID.ContainsKey(0))
