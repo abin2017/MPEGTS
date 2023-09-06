@@ -34,9 +34,6 @@
     <Reference Include="LoggerService">
       <HintPath>lib\LoggerService.dll</HintPath>
     </Reference>
-    <Reference Include="MPEGTS">
-      <HintPath>lib\MPEGTS.dll</HintPath>
-    </Reference>
     <Reference Include="NLog">
       <HintPath>lib\NLog.dll</HintPath>
     </Reference>
@@ -46,11 +43,15 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TSStreamer.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\MPEGTS\MPEGTS.csproj">
+      <Project>{375cb1e6-d769-4a8f-9b2e-5bfe5b97046e}</Project>
+      <Name>MPEGTS</Name>
+    </ProjectReference>
+  </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
     <None Include="lib\LoggerService.dll" />
-    <None Include="lib\MPEGTS.dll" />
     <None Include="lib\NLog.dll" />
     <None Include="lib\NLog.xml" />
   </ItemGroup>

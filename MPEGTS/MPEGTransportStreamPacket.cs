@@ -291,11 +291,22 @@ namespace MPEGTS
             }
         }
 
-        public static int FindSyncBytePosition(List<byte> bytes)
+        /// <summary>
+        /// Finding sync byte position
+        /// </summary>
+        /// <param name="bytes">byte buffer</param>
+        /// <param name="startPos">first position</param>
+        /// <param name="endPos">last position, -1 if end position corresponds to bytes size</param>
+        /// <returns></returns>
+        public static int FindSyncBytePosition(byte[] bytes, int startPos = 0, int endPos = -1)
         {
-            var pos = 0;
+            var pos = startPos;
+            if (endPos == -1)
+            {
+                endPos = bytes.Length;
+            }
             var buff = new byte[188];
-            while (pos + 188 < bytes.Count)
+            while (pos + 188 < endPos)
             {
                 if (bytes[pos] != MPEGTSSyncByte)
                 {
@@ -319,6 +330,18 @@ namespace MPEGTS
             return -1;
         }
 
+        /// <summary>
+        /// Finding sync byte position
+        /// </summary>
+        /// <param name="bytes">byte buffer</param>
+        /// <param name="startPos">first position</param>
+        /// <param name="endPos">last position, -1 if end position corresponds to bytes size</param>
+        /// <returns></returns>
+        public static int FindSyncBytePosition(List<byte> bytes, int startPos = 0, int endPos = -1)
+        {
+            return FindSyncBytePosition(bytes.ToArray(), startPos, endPos);
+        }
+
         public static List<MPEGTransportStreamPacket> Parse(byte[] bytes, int PIDFilter = -1)
         {
             return Parse(new List<byte>(bytes), PIDFilter);
@@ -326,14 +349,23 @@ namespace MPEGTS
 
         public static List<MPEGTransportStreamPacket> Parse(List<byte> bytes, int PIDFilter = -1)
         {
-            var pos = FindSyncBytePosition(bytes);
+            return Parse(bytes.ToArray(), 0, bytes.Count, PIDFilter);
+        }
+
+        public static List<MPEGTransportStreamPacket> Parse(byte[] bytes, int startPos, int endPos = -1, int PIDFilter = -1)
+        {
+            var pos = FindSyncBytePosition(bytes, startPos, endPos);
+            if (endPos == -1)
+            {
+                endPos = bytes.Length;
+            }
 
             var res = new List<MPEGTransportStreamPacket>();
 
             if (pos == -1)
                 return res;
 
-            while (pos + 188 < bytes.Count)
+            while (pos + 188 < endPos)
             {
                 var buff = new byte[188];
                 for (var i=0;i<188;i++)

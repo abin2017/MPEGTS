@@ -224,10 +224,7 @@ namespace MPEGTSStreamer
 
                         if (bytesRead > 0)
                         {
-                            var this5SecBytes = new byte[bytesRead];
-                            Buffer.BlockCopy(buffer, 0, this5SecBytes, 0, bytesRead);
-
-                            var packets = MPEGTransportStreamPacket.Parse(this5SecBytes);
+                            var packets = MPEGTransportStreamPacket.Parse(buffer, 0, bytesRead);
                             var tdtTable = DVBTTable.CreateFromPackets<TDTTable>(packets, 20);
                             if (tdtTable != null && tdtTable.UTCTime != DateTime.MinValue)
                             {
