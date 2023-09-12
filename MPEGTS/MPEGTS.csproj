@@ -17,6 +17,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="LoggerService" Version="1.0.4" />
+    <Folder Include="lib\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="LoggerService">
+      <HintPath>..\MPEGTSStreamer\lib\LoggerService.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

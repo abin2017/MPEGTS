@@ -224,7 +224,7 @@ namespace MPEGTSStreamer
 
                         if (bytesRead > 0)
                         {
-                            var packets = MPEGTransportStreamPacket.Parse(buffer, 0, bytesRead);
+                            var packets = MPEGTransportStreamPacket.Parse( buffer, 0, bytesRead);
                             var tdtTable = DVBTTable.CreateFromPackets<TDTTable>(packets, 20);
                             if (tdtTable != null && tdtTable.UTCTime != DateTime.MinValue)
                             {
