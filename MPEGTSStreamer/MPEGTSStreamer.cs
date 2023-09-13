@@ -8,7 +8,7 @@ using MPEGTS;
 
 namespace MPEGTSStreamer
 {
-    public class TSStreamer
+    public class MPEGTSStreamer
     {
         public IPEndPoint _endPoint { get; set; }
 
@@ -19,7 +19,7 @@ namespace MPEGTSStreamer
         private UdpClient _UDPClient = null;
         private ILoggingService _loggingService = new BasicLoggingService();
 
-        public TSStreamer(ILoggingService loggingService)
+        public MPEGTSStreamer(ILoggingService loggingService)
         {
             _loggingService = loggingService;
 
@@ -76,24 +76,25 @@ namespace MPEGTSStreamer
             }
         }
 
-        private string GetComputedSpeedAndProgressForLog(int totalBytesRead, long totalLength, int bitsPerSec)
+        private static string GetComputedSpeed(int bitsPerSec)
         {
-            var speedAndPosition = $"{Math.Round(totalBytesRead / (totalLength / 100.00), 2)}% ";
-
             if (bitsPerSec > 1000000)
             {
-                speedAndPosition += $" {Math.Round((bitsPerSec / 1000000.0), 2).ToString("N2")} Mb/sec";
+                return $" {Math.Round((bitsPerSec / 1000000.0), 2).ToString("N2")} Mb/sec";
             }
             else if (bitsPerSec > 1000)
             {
-                speedAndPosition += $" {Math.Round((bitsPerSec / 1000.0), 2).ToString("N2")} Kb/sec";
+                return $" {Math.Round((bitsPerSec / 1000.0), 2).ToString("N2")} Kb/sec";
             }
             else
             {
-                speedAndPosition += $" {bitsPerSec} b/sec";
+                return $" {bitsPerSec} b/sec";
             }
+        }
 
-            return speedAndPosition;
+        private static string GetComputedSProgress(int totalBytesRead, long totalLength)
+        {
+            return $"{Math.Round(totalBytesRead / (totalLength / 100.00), 2)}% ";
         }
 
         private int FindSyncBytePosition(FileStream fs)
@@ -168,14 +169,16 @@ namespace MPEGTSStreamer
                     }
                     else
                     {
+                        var newBufferSpeed = GetComputedSpeed((newBufferSize * 5) * 8);
+
                         if (newBufferSize > bufferSize)
                         {
-                            _loggingService.Debug($" .. >>> increasing buffer size to: {bufferSize / 1024} KB  [timeDiff: {timeDiff.TotalMilliseconds}]");
+                            _loggingService.Debug($" .. >>> increasing buffer size to: {bufferSize / 1024} KB  (~{newBufferSpeed}) [timeDiff: {timeDiff.TotalMilliseconds.ToString("N2")}]");
                         }
                         else
                         if (newBufferSize < bufferSize)
                         {
-                            _loggingService.Debug($" .. <<< decreasing buffer size to: {bufferSize / 1024} KB  [timeDiff: {timeDiff.TotalMilliseconds}]");
+                            _loggingService.Debug($" .. <<< decreasing buffer size to: {bufferSize / 1024} KB  (~{newBufferSpeed}) [timeDiff: {timeDiff.TotalMilliseconds.ToString("N2")}]");
                         }
 
                         bufferSize = GetCorrectedBufferSize(newBufferSize);
@@ -212,7 +215,7 @@ namespace MPEGTSStreamer
 
                         lastSpeedCalculationTime = DateTime.Now;
 
-                        speedAndPosition = GetComputedSpeedAndProgressForLog(totalBytesRead, fs.Length, (bufferSize * 5) * 8);
+                        speedAndPosition = GetComputedSProgress(totalBytesRead, fs.Length) + " " + GetComputedSpeed((bufferSize * 5) * 8);
 
                         var bytesRead = fs.Read(buffer, 0, bufferSize);
 
@@ -250,7 +253,8 @@ namespace MPEGTSStreamer
                     if ((DateTime.Now - lastSpeedCalculationTimeLog).TotalMilliseconds > 1000)
                     {
                         lastSpeedCalculationTimeLog = DateTime.Now;
-                        _loggingService.Debug($"Streaming data: {speedAndPosition}");
+                        //_loggingService.Debug($"Streaming data: {speedAndPosition}");
+                        Console.Out.WriteLine($"Streaming data: {speedAndPosition}");
                     }
                 }
             }

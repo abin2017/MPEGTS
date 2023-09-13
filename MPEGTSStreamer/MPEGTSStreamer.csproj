@@ -41,13 +41,16 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TSStreamer.cs" />
+    <Compile Include="MPEGTSStreamer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
     <None Include="lib\LoggerService.dll" />
     <None Include="lib\NLog.dll" />
     <None Include="lib\NLog.xml" />
+    <None Include="NLog.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MPEGTS\MPEGTS.csproj">

@@ -22,7 +22,7 @@ namespace MPEGTSStreamer
                 return;
             }
 
-            var streamer = new TSStreamer(new BasicLoggingService());
+            var streamer = new MPEGTSStreamer(new NLogLoggingService("NLog.config"));
 
             if (args.Length == 2)
             {
