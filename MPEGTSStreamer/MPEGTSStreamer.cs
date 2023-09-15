@@ -94,7 +94,7 @@ namespace MPEGTSStreamer
 
         private static string GetComputedSProgress(int totalBytesRead, long totalLength)
         {
-            return $"{Math.Round(totalBytesRead / (totalLength / 100.00), 2)}% ";
+            return $"{(totalBytesRead / (totalLength / 100.00)).ToString("N2")}% ";
         }
 
         private int FindSyncBytePosition(FileStream fs)
@@ -102,13 +102,13 @@ namespace MPEGTSStreamer
             if (!fs.CanRead)
                 return -1;
 
-            if (fs.Length<188*2)
+            if (fs.Length < 188 * 2)
                 return -1;
 
-            var buff = new byte[188*2];
-            var bytesRead = fs.Read(buff, 0, 188*2);
+            var buff = new byte[188 * 2];
+            var bytesRead = fs.Read(buff, 0, 188 * 2);
 
-            if (bytesRead<188*2)
+            if (bytesRead < 188 * 2)
                 return -1;
 
             var pos = 0;
@@ -117,7 +117,7 @@ namespace MPEGTSStreamer
             {
                 if (
                         (buff[pos] == MPEGTransportStreamPacket.MPEGTSSyncByte) &&
-                        (buff[pos+188] == MPEGTransportStreamPacket.MPEGTSSyncByte)
+                        (buff[pos + 188] == MPEGTransportStreamPacket.MPEGTSSyncByte)
                    )
                 {
                     fs.Position = pos;
@@ -173,12 +173,12 @@ namespace MPEGTSStreamer
 
                         if (newBufferSize > bufferSize)
                         {
-                            _loggingService.Debug($" .. >>> increasing buffer size to: {bufferSize / 1024} KB  (~{newBufferSpeed}) [timeDiff: {timeDiff.TotalMilliseconds.ToString("N2")}]");
+                            _loggingService.Debug($" .. >>> increasing buffer size to: {bufferSize / 1024} KB  (~{newBufferSpeed}) [timeDiff: {GetHumanReadableTimeSpan(timeDiff)}]");
                         }
                         else
                         if (newBufferSize < bufferSize)
                         {
-                            _loggingService.Debug($" .. <<< decreasing buffer size to: {bufferSize / 1024} KB  (~{newBufferSpeed}) [timeDiff: {timeDiff.TotalMilliseconds.ToString("N2")}]");
+                            _loggingService.Debug($" .. <<< decreasing buffer size to: {bufferSize / 1024} KB  (~{newBufferSpeed}) [timeDiff: {GetHumanReadableTimeSpan(timeDiff)}]");
                         }
 
                         bufferSize = GetCorrectedBufferSize(newBufferSize);
@@ -189,11 +189,26 @@ namespace MPEGTSStreamer
             return bufferSize;
         }
 
+        private string GetHumanReadableTimeSpan(TimeSpan span)
+        {
+            var res = "";
+
+            if (span.Days > 0)
+            {
+                res += $"{span.Days} days ";
+            }
+            res += $"{span.Hours.ToString().PadLeft(2, '0')}:";
+            res += $"{span.Minutes.ToString().PadLeft(2, '0')}:";
+            res += $"{span.Seconds.ToString().PadLeft(2, '0')}";
+
+            return res;
+        }
+
         public void Stream(string fileName, double initialMegaBitsSpeed = 4.0)
         {
             _loggingService.Info($"Streaming file: {fileName}");
 
-            var bufferSize = GetCorrectedBufferSize(Convert.ToInt32((initialMegaBitsSpeed*1000000/8)/5));
+            var bufferSize = GetCorrectedBufferSize(Convert.ToInt32((initialMegaBitsSpeed * 1000000 / 8) / 5));
 
             var buffer = new byte[MaxBufferSize];
             var lastSpeedCalculationTime = DateTime.MinValue;
@@ -201,10 +216,13 @@ namespace MPEGTSStreamer
             var lastTDTTime = DateTime.MinValue;
             var speedAndPosition = "";
             var timeShift = TimeSpan.MinValue;
+            var streamStartTime = DateTime.MinValue;
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
             {
                 FindSyncBytePosition(fs);
+
+                streamStartTime = DateTime.Now;
 
                 var totalBytesRead = 0;
                 while (fs.CanRead && totalBytesRead < fs.Length)
@@ -217,9 +235,13 @@ namespace MPEGTSStreamer
 
                         speedAndPosition = GetComputedSProgress(totalBytesRead, fs.Length) + " " + GetComputedSpeed((bufferSize * 5) * 8);
 
+                        // reading data
+
                         var bytesRead = fs.Read(buffer, 0, bufferSize);
 
                         totalBytesRead += bytesRead;
+
+                        // sending data to UDP
 
                         SendByteArray(buffer, bytesRead);
 
@@ -227,7 +249,7 @@ namespace MPEGTSStreamer
 
                         if (bytesRead > 0)
                         {
-                            var packets = MPEGTransportStreamPacket.Parse( buffer, 0, bytesRead);
+                            var packets = MPEGTransportStreamPacket.Parse(buffer, 0, bytesRead);
                             var tdtTable = DVBTTable.CreateFromPackets<TDTTable>(packets, 20);
                             if (tdtTable != null && tdtTable.UTCTime != DateTime.MinValue)
                             {
@@ -237,9 +259,13 @@ namespace MPEGTSStreamer
                                 {
                                     timeShift = DateTime.Now - tdtTable.UTCTime;
                                     lastTDTTime = DateTime.Now;
+                                    _loggingService.Debug($" .. !!!!!!!!     time diff: {GetHumanReadableTimeSpan(timeShift)}");
                                 }
                                 else
                                 {
+                                    var newTimeShift = DateTime.Now - tdtTable.UTCTime;
+                                    _loggingService.Debug($" .. !!!!!!!!     time diff: {GetHumanReadableTimeSpan(timeShift)}");
+                                    _loggingService.Debug($" .. !!!!!!!! new time diff: {GetHumanReadableTimeSpan(newTimeShift)}");
                                     bufferSize = CalculateNewBufferSize(bufferSize, timeShift, tdtTable.UTCTime, lastTDTTime);
                                 }
 
@@ -247,14 +273,16 @@ namespace MPEGTSStreamer
                             }
                         }
 
-                        speedAndPosition += $" (time for parse & send: {(DateTime.Now - lastSpeedCalculationTime).TotalMilliseconds} ms)";
+                        speedAndPosition += $" (exec time: {(DateTime.Now - lastSpeedCalculationTime).TotalMilliseconds} ms)";
                     }
 
                     if ((DateTime.Now - lastSpeedCalculationTimeLog).TotalMilliseconds > 1000)
                     {
                         lastSpeedCalculationTimeLog = DateTime.Now;
+                        _loggingService.Debug($"Streaming {Path.GetFileName(fileName)}: {GetHumanReadableTimeSpan(DateTime.Now - streamStartTime)} {speedAndPosition}");
+
                         //_loggingService.Debug($"Streaming data: {speedAndPosition}");
-                        Console.Out.WriteLine($"Streaming data: {speedAndPosition}");
+                        //Console.Out.WriteLine($"Streaming data: {speedAndPosition}");
                     }
                 }
             }
