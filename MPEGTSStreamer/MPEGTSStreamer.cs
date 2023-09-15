@@ -255,34 +255,23 @@ namespace MPEGTSStreamer
                             {
                                 _loggingService.Debug($" .. !!!!!!!! TDT table time: {tdtTable.UTCTime}");
 
-                                if (timeShift == TimeSpan.MinValue)
+                                if (timeShift != TimeSpan.MinValue)
                                 {
-                                    timeShift = DateTime.Now - tdtTable.UTCTime;
-                                    lastTDTTime = DateTime.Now;
-                                    _loggingService.Debug($" .. !!!!!!!!     time diff: {GetHumanReadableTimeSpan(timeShift)}");
-                                }
-                                else
-                                {
-                                    var newTimeShift = DateTime.Now - tdtTable.UTCTime;
-                                    _loggingService.Debug($" .. !!!!!!!!     time diff: {GetHumanReadableTimeSpan(timeShift)}");
-                                    _loggingService.Debug($" .. !!!!!!!! new time diff: {GetHumanReadableTimeSpan(newTimeShift)}");
                                     bufferSize = CalculateNewBufferSize(bufferSize, timeShift, tdtTable.UTCTime, lastTDTTime);
                                 }
 
+                                timeShift = DateTime.Now - tdtTable.UTCTime;
                                 lastTDTTime = DateTime.Now;
                             }
                         }
 
-                        speedAndPosition += $" (exec time: {(DateTime.Now - lastSpeedCalculationTime).TotalMilliseconds} ms)";
+                        speedAndPosition += $" (exec time: {((DateTime.Now - lastSpeedCalculationTime).TotalMilliseconds).ToString("N2")} ms)";
                     }
 
                     if ((DateTime.Now - lastSpeedCalculationTimeLog).TotalMilliseconds > 1000)
                     {
                         lastSpeedCalculationTimeLog = DateTime.Now;
                         _loggingService.Debug($"Streaming {Path.GetFileName(fileName)}: {GetHumanReadableTimeSpan(DateTime.Now - streamStartTime)} {speedAndPosition}");
-
-                        //_loggingService.Debug($"Streaming data: {speedAndPosition}");
-                        //Console.Out.WriteLine($"Streaming data: {speedAndPosition}");
                     }
                 }
             }
