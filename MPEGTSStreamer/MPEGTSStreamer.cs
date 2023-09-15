@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -188,19 +189,78 @@ namespace MPEGTSStreamer
             return res;
         }
 
-        private string GetHumanReadableSize(double bytes)
+        private string GetHumanReadableSize(double bytes, bool highPrecision = false)
         {
+            var frm = highPrecision ? "N2" : "N0";
+
             if (bytes > 1000000)
             {
-                return Math.Round(bytes / 1000000.0, 0).ToString("N0") + " MB";
+                return Math.Round(bytes / 1000000.0, 2).ToString(frm) + " MB";
             }
 
             if (bytes > 1000)
             {
-                return Math.Round(bytes / 1000.0, 0).ToString("N0") + " kB";
+                return Math.Round(bytes / 1000.0, 2).ToString(frm) + " kB";
             }
 
-            return bytes.ToString("N0") + " B";
+            return bytes.ToString(frm) + " B";
+        }
+
+        public Dictionary<DateTime,double> CalculateBitRate(string fileName, double initialMegaBitsSpeed = 4.0)
+        {
+            _loggingService.Info($"Analyzing bitrate of file: {fileName}");
+            var res = new Dictionary<DateTime, double>();
+
+            var startTime = DateTime.Now;
+
+            var bufferSize = 100000;
+
+            var buffer = new byte[MaxBufferSize];;
+            var lastTDTTime = DateTime.MinValue;
+            var bytesReadFromLastTDT = 0;
+
+            using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+            {
+                FindSyncBytePosition(fs);
+
+                var totalBytesRead = 0;
+                while (fs.CanRead && totalBytesRead < fs.Length)
+                {
+                    // reading data
+
+                    var bytesRead = fs.Read(buffer, 0, bufferSize);
+
+                    totalBytesRead += bytesRead;
+                    bytesReadFromLastTDT += bytesRead;
+
+                    if (bytesRead > 0)
+                    {
+                        var packets = MPEGTransportStreamPacket.Parse(buffer, 0, bytesRead);
+                        var tdtTable = DVBTTable.CreateFromPackets<TDTTable>(packets, 20);
+                        if (tdtTable != null && tdtTable.UTCTime != DateTime.MinValue)
+                        {
+                            if (lastTDTTime != DateTime.MinValue && (tdtTable.UTCTime - lastTDTTime).TotalSeconds > 1)
+                            {
+                                var timeShiftFromLastTDT = tdtTable.UTCTime - lastTDTTime;
+                                var bitsPerSec = (bytesReadFromLastTDT / timeShiftFromLastTDT.TotalSeconds) * 8;
+
+                                var speedAndPosition = GetComputedSProgress(totalBytesRead, fs.Length);
+                                var bitRate = $"continuous bitrate: { GetHumanReadableSize(bitsPerSec, true)}/ sec";
+                                _loggingService.Debug($"Analzying stream {Path.GetFileName(fileName)}: {speedAndPosition} {bitRate}");
+
+                                res.Add(tdtTable.UTCTime, bitsPerSec);
+                            }
+
+                            lastTDTTime = tdtTable.UTCTime;
+                            bytesReadFromLastTDT = 0;
+                        }
+                    }
+                }
+            }
+
+            _loggingService.Debug($"Analyzing time {GetHumanReadableTimeSpan(DateTime.Now - startTime)}");
+
+            return res;
         }
 
         public void Stream(string fileName, double initialMegaBitsSpeed = 4.0, double loopsPerSecond = 3)
@@ -232,7 +292,7 @@ namespace MPEGTSStreamer
 
                         lastSpeedCalculationTime = DateTime.Now;
 
-                        speedAndPosition = GetComputedSProgress(totalBytesRead, fs.Length) + " " + GetHumanReadableSize((bufferSize * loopsPerSecond) * 8)+"/sec";
+                        speedAndPosition = GetComputedSProgress(totalBytesRead, fs.Length) + " " + GetHumanReadableSize((bufferSize * loopsPerSecond) * 8, true)+"/sec";
 
                         // reading data
 

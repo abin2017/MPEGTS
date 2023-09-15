@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using LoggerService;
 
 namespace MPEGTSStreamer
@@ -33,7 +34,18 @@ namespace MPEGTSStreamer
                 streamer.SetEndpoint("127.0.0.1:1234");
             }
 
-            streamer.Stream(args[0]);
+            streamer.Stream(args[0], 4, 10);
+
+            //var bitRateSummary = streamer.CalculateBitRate(args[0]);
+
+            //// save bitRate summary to CSV
+            //var csv = new StringBuilder();
+            //csv.AppendLine("time,bitRate");
+            //foreach (var kvp in bitRateSummary)
+            //{
+            //    csv.AppendLine($"{kvp.Key},{kvp.Value.ToString().Replace(",",".")}");
+            //}
+            //File.WriteAllText("AVGBitRate.csv", csv.ToString());
         }
 
         public static void Help()
