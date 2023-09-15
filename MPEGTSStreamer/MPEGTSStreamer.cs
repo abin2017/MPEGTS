@@ -76,22 +76,6 @@ namespace MPEGTSStreamer
             }
         }
 
-        private static string GetComputedSpeed(double bitsPerSec)
-        {
-            if (bitsPerSec > 1000000)
-            {
-                return $" {Math.Round((bitsPerSec / 1000000.0), 2).ToString("N2")} Mb/sec";
-            }
-            else if (bitsPerSec > 1000)
-            {
-                return $" {Math.Round((bitsPerSec / 1000.0), 2).ToString("N2")} Kb/sec";
-            }
-            else
-            {
-                return $" {bitsPerSec} b/sec";
-            }
-        }
-
         private static string GetComputedSProgress(int totalBytesRead, long totalLength)
         {
             return $"{(totalBytesRead / (totalLength / 100.00)).ToString("N2")}% ";
@@ -140,7 +124,7 @@ namespace MPEGTSStreamer
             return bufferSize;
         }
 
-        private int CalculateNewBufferSize(int bufferSize, TimeSpan timeShift, DateTime TDTTime, DateTime lastTDTTime, double loopsPerSecond = 10)
+        private int CalculateNewBufferSize(int bufferSize, TimeSpan timeShift, DateTime TDTTime, DateTime lastTDTTime, double loopsPerSecond)
         {
             var expectedTime = TDTTime.Add(timeShift);
             var timeDiff = DateTime.Now - expectedTime;
@@ -169,7 +153,7 @@ namespace MPEGTSStreamer
                     }
                     else
                     {
-                        var newBufferSpeed = GetComputedSpeed((newBufferSize * loopsPerSecond) * 8);
+                        var newBufferSpeed = GetHumanReadableSize((newBufferSize * loopsPerSecond) * 8) + "/sec";
 
                         if (newBufferSize > bufferSize)
                         {
@@ -204,7 +188,22 @@ namespace MPEGTSStreamer
             return res;
         }
 
-        public void Stream(string fileName, double initialMegaBitsSpeed = 4.0, double loopsPerSecond = 10)
+        private string GetHumanReadableSize(double bytes)
+        {
+            if (bytes > 1000000)
+            {
+                return Math.Round(bytes / 1000000.0, 0).ToString("N0") + " MB";
+            }
+
+            if (bytes > 1000)
+            {
+                return Math.Round(bytes / 1000.0, 0).ToString("N0") + " kB";
+            }
+
+            return bytes.ToString("N0") + " B";
+        }
+
+        public void Stream(string fileName, double initialMegaBitsSpeed = 4.0, double loopsPerSecond = 3)
         {
             _loggingService.Info($"Streaming file: {fileName}");
 
@@ -233,7 +232,7 @@ namespace MPEGTSStreamer
 
                         lastSpeedCalculationTime = DateTime.Now;
 
-                        speedAndPosition = GetComputedSProgress(totalBytesRead, fs.Length) + " " + GetComputedSpeed((bufferSize * loopsPerSecond) * 8);
+                        speedAndPosition = GetComputedSProgress(totalBytesRead, fs.Length) + " " + GetHumanReadableSize((bufferSize * loopsPerSecond) * 8)+"/sec";
 
                         // reading data
 
@@ -257,7 +256,7 @@ namespace MPEGTSStreamer
 
                                 if (timeShift != TimeSpan.MinValue)
                                 {
-                                    bufferSize = CalculateNewBufferSize(bufferSize, timeShift, tdtTable.UTCTime, lastTDTTime);
+                                    bufferSize = CalculateNewBufferSize(bufferSize, timeShift, tdtTable.UTCTime, lastTDTTime, loopsPerSecond);
                                 }
 
                                 timeShift = DateTime.Now - tdtTable.UTCTime;
@@ -266,6 +265,7 @@ namespace MPEGTSStreamer
                         }
 
                         speedAndPosition += $" (exec time: {((DateTime.Now - lastSpeedCalculationTime).TotalMilliseconds).ToString("N2")} ms)";
+                        speedAndPosition += $" bytes per 1/{loopsPerSecond} sec: {GetHumanReadableSize(bytesRead)}";
                     }
 
                     if ((DateTime.Now - lastSpeedCalculationTimeLog).TotalMilliseconds > 1000)
