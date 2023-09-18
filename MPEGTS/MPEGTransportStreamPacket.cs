@@ -4,6 +4,8 @@ using System.Text;
 
 namespace MPEGTS
 {
+    // https://en.wikipedia.org/wiki/MPEG_transport_stream
+
     public class MPEGTransportStreamPacket
     {
         public const byte MPEGTSSyncByte = 71;
@@ -16,6 +18,20 @@ namespace MPEGTS
 
         public ScramblingControlEnum ScramblingControl { get; set; }
         public AdaptationFieldControlEnum AdaptationFieldControl { get; set; }
+
+        public byte AdaptationFieldLength { get; set; }
+
+        // Adaptation Field Flag:
+        public bool DiscontinuityIndicator { get; set; }
+        public bool RandomAccessIndicator { get; set; }
+        public bool ElementaryStreamPriorityIndicator  { get; set; }
+        public bool PCRFlag { get; set; }
+        public bool OPCRFlag { get; set; }
+        public bool SplicingPointFlag { get; set; }
+        public bool TransportPrivateDataFlag { get; set; }
+        public bool AdaptationFieldExtensionFlag { get; set; }
+
+        public List<byte> PCR { get; set; } = new List<byte>(); // 6 bytes of PCR
 
         public int PID { get; set; }
         public byte ContinuityCounter { get; set; }
@@ -86,6 +102,37 @@ namespace MPEGTS
 
             WriteByteArrayToConsole(Payload.ToArray());
         }
+
+        public Tuple<long,long> GetPCRClock()
+        {
+            if (!PCRFlag || PCR == null || PCR.Count<6)
+            {
+                return null;
+            }
+
+            long PCR90 = PCR[0];
+            PCR90 = PCR90 * 256;
+
+            PCR90 += PCR[1];
+            PCR90 = PCR90 * 256;
+
+            PCR90 += PCR[2];
+            PCR90 = PCR90 * 256;
+
+            PCR90 += PCR[3];
+            PCR90 = PCR90 * 256;
+
+            PCR90 += PCR[4];
+
+            PCR90 = PCR90 >> 7;
+
+            long PCR33 = PCR[4];
+            PCR33 = PCR33 * 256 + PCR[5];
+            PCR33 = PCR33 & 511;
+
+            return new Tuple<long, long>(PCR90, PCR33);
+        }
+
         public static string WriteBytesToString(List<byte> bytes)
         {
             var res = new StringBuilder();
@@ -284,7 +331,28 @@ namespace MPEGTS
 
                         break;
                     default:
+
                         Payload.Add(b);
+
+                        if (bytePos==4)
+                        {
+                            AdaptationFieldLength = b;
+                        }
+                        if (bytePos == 5)
+                        {
+                            DiscontinuityIndicator = (b & 1) == 1;
+                            RandomAccessIndicator = (b & 2) == 2;
+                            ElementaryStreamPriorityIndicator = (b & 4) == 4;
+                            PCRFlag = (b & 8) == 8;
+                            OPCRFlag = (b & 16) == 16;
+                            SplicingPointFlag = (b & 32) == 32;
+                            TransportPrivateDataFlag = (b & 64) == 64;
+                            AdaptationFieldExtensionFlag = (b & 128) == 128;
+                        }
+                        if (PCRFlag && bytePos>5 && bytePos<12)
+                        {
+                            PCR.Add(b);
+                        }
                         break;
                 }
                 bytePos++;

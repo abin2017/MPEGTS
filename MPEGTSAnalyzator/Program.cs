@@ -183,6 +183,19 @@ namespace MPEGTSAnalyzator
                 }
             }
 
+            //var packetsTotal = packets.Count;
+            //var packetPosition = 0;
+            //foreach (var packet in packets)
+            //{
+            //    if (packet.PCRFlag)
+            //    {
+            //        var clock = packet.GetPCRClock();
+
+            //        Console.WriteLine($"PCR present: {clock.Item1} - {clock.Item2} ({packetPosition}/{packetsTotal})");
+            //    }
+            //    packetPosition++;
+            //}
+
             if (includeEIT)
             {
 
