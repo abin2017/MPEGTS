@@ -277,6 +277,12 @@ namespace MPEGTSStreamer
             var timeShift = TimeSpan.MinValue;
             var streamStartTime = DateTime.MinValue;
 
+            SDTTable sDTTable = null;
+            PSITable psiTable = null;
+            PMTTable pmtTable = null;
+
+            var lastPCRTimeStamp = ulong.MinValue;
+
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
             {
                 FindSyncBytePosition(fs);
@@ -309,7 +315,9 @@ namespace MPEGTSStreamer
                         if (bytesRead > 0)
                         {
                             var packets = MPEGTransportStreamPacket.Parse(buffer, 0, bytesRead);
+
                             var tdtTable = DVBTTable.CreateFromPackets<TDTTable>(packets, 20);
+                            /*
                             if (tdtTable != null && tdtTable.UTCTime != DateTime.MinValue)
                             {
                                 _loggingService.Debug($" .. !!!!!!!! TDT table time: {tdtTable.UTCTime}");
@@ -321,6 +329,42 @@ namespace MPEGTSStreamer
 
                                 timeShift = DateTime.Now - tdtTable.UTCTime;
                                 lastTDTTime = DateTime.Now;
+                            }
+                            */
+                            if (psiTable == null)
+                            {
+                                psiTable = DVBTTable.CreateFromPackets<PSITable>(packets, 0);
+                            }
+                            if (sDTTable == null)
+                            {
+                                sDTTable = DVBTTable.CreateFromPackets<SDTTable>(packets, 17);
+                            }
+                            if (pmtTable == null && psiTable != null && sDTTable != null)
+                            {
+                                var servicesMapPIDs = MPEGTransportStreamPacket.GetAvailableServicesMapPIDs(sDTTable, psiTable);
+             
+                                foreach (var kvp in servicesMapPIDs)
+                                {
+                                    pmtTable = DVBTTable.CreateFromPackets<PMTTable>(packets, kvp.Value);
+
+                                    if (pmtTable != null)
+                                    {
+                                        break;
+                                    }
+                                }
+                            }
+                            if (pmtTable != null)
+                            {
+                                // find first packet with PCR flag
+                                foreach (var packet in packets)
+                                {
+                                    if (packet.PID == pmtTable.PCRPID && packet.PCRFlag)
+                                    {
+                                        var msTime = packet.GetPCRClock().Value / 27000000;
+                                        speedAndPosition += $" (msTime: {msTime})";
+                                        break;
+                                    }
+                                }
                             }
                         }
 

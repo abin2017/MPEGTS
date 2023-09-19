@@ -111,8 +111,15 @@ namespace MPEGTS
             Reserved = Convert.ToByte((bytes[pos + 1] & 48) >> 4);
             SectionLength = Convert.ToInt32(((bytes[pos + 1] & 15) << 8) + bytes[pos + 2]);
 
+            if (SectionLength > bytes.Count)
+            {
+                Console.WriteLine("SDT: bad SectionLength!");
+                return;
+            }
+
             Data = new byte[SectionLength];
             CRC = new byte[4];
+
             bytes.CopyTo(0, Data, 0, SectionLength);
             bytes.CopyTo(SectionLength, CRC, 0, 4);
 
