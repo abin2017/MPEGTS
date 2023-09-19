@@ -71,7 +71,7 @@ namespace MPEGTSAnalyzator
             var logger = new FileLoggingService(LoggingLevelEnum.Debug);
             logger.LogFilename = "Log.log";
 
-            Console.Write($"Reading ....... ");
+            Console.Write($"Reading... ");
 
             var bytes = LoadBytesFromFile(path);
             var packets = MPEGTransportStreamPacket.Parse(bytes);
@@ -183,18 +183,32 @@ namespace MPEGTSAnalyzator
                 }
             }
 
-            //var packetsTotal = packets.Count;
-            //var packetPosition = 0;
-            //foreach (var packet in packets)
-            //{
-            //    if (packet.PCRFlag)
-            //    {
-            //        var clock = packet.GetPCRClock();
+            var packetsTotal = packets.Count;
+            var packetPosition = 0;
+            ulong previousPCR = 0; // Initialize with an initial value
+            foreach (var packet in packets)
+            {
+                if (packet.PID == 0x14)
+                {
+                    var tdtTable = TDTTable.Create<TDTTable>(packet.Payload);
+                    Console.WriteLine($"TDT time: {tdtTable.UTCTime} ");
+                }
 
-            //        Console.WriteLine($"PCR present: {clock.Item1} - {clock.Item2} ({packetPosition}/{packetsTotal})");
-            //    }
-            //    packetPosition++;
-            //}
+                if (packet.PCRFlag)
+                {
+                    //packet.WriteToConsole();
+
+                    var clock = packet.GetPCRClock();
+                    var msTime = clock.Value / 27000000;
+                    Console.WriteLine($"PCR present: {packet.AdaptationFieldControl.ToString().PadLeft(25)} [{Convert.ToString(packet.PCR[0], 16).PadLeft(2, ' ')} {Convert.ToString(packet.PCR[1], 16).PadLeft(2, ' ')} {Convert.ToString(packet.PCR[2], 16).PadLeft(2, ' ')} {Convert.ToString(packet.PCR[3], 16).PadLeft(2, ' ')} {Convert.ToString(packet.PCR[4], 16).PadLeft(2, ' ')} {Convert.ToString(packet.PCR[5], 16).PadLeft(2, ' ')}] {clock.Value.ToString().PadLeft(20, ' ')}, {msTime.ToString().PadLeft(10, ' ')} ms, PID: {packet.PID.ToString().PadLeft(3, ' ')} ({packetPosition}/{packetsTotal})");
+
+                    previousPCR = clock.Value;
+                }
+                packetPosition++;
+                if (packetPosition > 1000)
+                    break;
+
+            }
 
             if (includeEIT)
             {

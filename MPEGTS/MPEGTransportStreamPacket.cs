@@ -103,34 +103,22 @@ namespace MPEGTS
             WriteByteArrayToConsole(Payload.ToArray());
         }
 
-        public Tuple<long,long> GetPCRClock()
+        /// <summary>
+        /// Returns 27MHz timestamp
+        /// </summary>
+        /// <returns></returns>
+        public ulong? GetPCRClock()
         {
             if (!PCRFlag || PCR == null || PCR.Count<6)
             {
                 return null;
             }
 
-            long PCR90 = PCR[0];
-            PCR90 = PCR90 * 256;
+            ulong pcrBase = ((ulong)PCR[0] << 25) | ((ulong)PCR[1] << 17) | ((ulong)PCR[2] << 9) | (ulong)(PCR[3] << 1) | (ulong)(PCR[4] >> 7);
+            ulong pcrExtension = (ulong)(PCR[4] & 0x01) << 8 | PCR[5];
+            ulong pcrValue = (pcrBase * 300) + pcrExtension;
 
-            PCR90 += PCR[1];
-            PCR90 = PCR90 * 256;
-
-            PCR90 += PCR[2];
-            PCR90 = PCR90 * 256;
-
-            PCR90 += PCR[3];
-            PCR90 = PCR90 * 256;
-
-            PCR90 += PCR[4];
-
-            PCR90 = PCR90 >> 7;
-
-            long PCR33 = PCR[4];
-            PCR33 = PCR33 * 256 + PCR[5];
-            PCR33 = PCR33 & 511;
-
-            return new Tuple<long, long>(PCR90, PCR33);
+            return pcrValue;
         }
 
         public static string WriteBytesToString(List<byte> bytes)
