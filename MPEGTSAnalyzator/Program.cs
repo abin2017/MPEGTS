@@ -5,6 +5,7 @@ using MPEGTS;
 using LoggerService;
 using System.Text;
 using System.Security.Cryptography;
+using System.Linq;
 
 namespace MPEGTSAnalyzator
 {
@@ -71,12 +72,17 @@ namespace MPEGTSAnalyzator
             var logger = new FileLoggingService(LoggingLevelEnum.Debug);
             logger.LogFilename = "Log.log";
 
-            Console.Write($"Reading... ");
+            Console.Write($"Reading data... ");
 
             var bytes = LoadBytesFromFile(path);
+
+            Console.WriteLine();
+            Console.Write($"Parsing packets... ");
+
             var packets = MPEGTransportStreamPacket.Parse(bytes);
 
             Console.WriteLine($" {packets.Count} packets found");
+
 
             var packetsByPID = MPEGTransportStreamPacket.SortPacketsByPID(packets);
 
@@ -86,6 +92,7 @@ namespace MPEGTSAnalyzator
 
             SDTTable sDTTable = null;
             PSITable psiTable = null;
+            PMTTable pmtTable = null;
 
             foreach (var kvp in packetsByPID)
             {
@@ -173,41 +180,47 @@ namespace MPEGTSAnalyzator
 
                     if (packetsByPID.ContainsKey(kvp.Value))
                     {
-                        var mptPacket = DVBTTable.CreateFromPackets<PMTTable>(packetsByPID[kvp.Value], kvp.Value);
-                        if (mptPacket != null)
+                        pmtTable = DVBTTable.CreateFromPackets<PMTTable>(packetsByPID[kvp.Value], kvp.Value);
+                        if (pmtTable != null)
                         {
-                            mptPacket.WriteToConsole();
+                            pmtTable.WriteToConsole();
                         }
                     }
 
                 }
             }
 
-            var packetsTotal = packets.Count;
-            var packetPosition = 0;
-            ulong previousPCR = 0; // Initialize with an initial value
-            foreach (var packet in packets)
+            if (pmtTable != null && pmtTable.PCRPID != 0)
             {
-                if (packet.PID == 0x14)
+                Console.WriteLine();
+                Console.WriteLine($"PCR - Program Clock Reference:");
+                Console.WriteLine($"--------------------------------");
+                ulong minPCR = ulong.MaxValue;
+                ulong maxPCR = ulong.MinValue;
+                ulong pcrPacketsCount = 0;
+
+                foreach (var packet in packets)
                 {
-                    var tdtTable = TDTTable.Create<TDTTable>(packet.Payload);
-                    Console.WriteLine($"TDT time: {tdtTable.UTCTime} ");
+                    if (packet.PID == pmtTable.PCRPID && packet.PCRFlag)
+                    {
+                        pcrPacketsCount++;
+                        var msTime = packet.GetPCRClock().Value / 27000000;
+
+                        if (msTime < minPCR)
+                        {
+                            minPCR = msTime;
+                        }
+                        if (msTime > maxPCR)
+                        {
+                            maxPCR = msTime;
+                        }
+                    }
                 }
-
-                if (packet.PCRFlag)
-                {
-                    //packet.WriteToConsole();
-
-                    var clock = packet.GetPCRClock();
-                    var msTime = clock.Value / 27000000;
-                    Console.WriteLine($"PCR present: {packet.AdaptationFieldControl.ToString().PadLeft(25)} [{Convert.ToString(packet.PCR[0], 16).PadLeft(2, ' ')} {Convert.ToString(packet.PCR[1], 16).PadLeft(2, ' ')} {Convert.ToString(packet.PCR[2], 16).PadLeft(2, ' ')} {Convert.ToString(packet.PCR[3], 16).PadLeft(2, ' ')} {Convert.ToString(packet.PCR[4], 16).PadLeft(2, ' ')} {Convert.ToString(packet.PCR[5], 16).PadLeft(2, ' ')}] {clock.Value.ToString().PadLeft(20, ' ')}, {msTime.ToString().PadLeft(10, ' ')} ms, PID: {packet.PID.ToString().PadLeft(3, ' ')} ({packetPosition}/{packetsTotal})");
-
-                    previousPCR = clock.Value;
-                }
-                packetPosition++;
-                if (packetPosition > 1000)
-                    break;
-
+                Console.WriteLine($"PCR PID:         {pmtTable.PCRPID}");
+                Console.WriteLine($"Packets count:   {pcrPacketsCount}");
+                Console.WriteLine($"Min:             {minPCR}");
+                Console.WriteLine($"Max:             {maxPCR}");
+                Console.WriteLine($"Duration:        {(maxPCR - minPCR) / 60}:{(maxPCR - minPCR)-((maxPCR-minPCR)/60)*60}");
             }
 
             if (includeEIT)
@@ -270,15 +283,22 @@ namespace MPEGTSAnalyzator
 
         public static List<byte> LoadBytesFromFile(string path)
         {
-            byte[] buffer = new byte[188];
+            var buffSize = 1024 * 1024;
+            byte[] buffer = new byte[buffSize];
+            byte[] packetBuffer = new byte[188];
             var streamBytes = new List<byte>();
 
             using (var fs = new FileStream(path, FileMode.Open))
             {
+                while (fs.Position + buffSize < fs.Length)
+                {
+                    fs.Read(buffer, 0, buffSize);
+                    streamBytes.AddRange(buffer);
+                }
                 while (fs.Position + 188 < fs.Length)
                 {
-                    fs.Read(buffer, 0, 188);
-                    streamBytes.AddRange(buffer);
+                    fs.Read(packetBuffer, 0, 188);
+                    streamBytes.AddRange(packetBuffer);
                 }
                 fs.Close();
             }

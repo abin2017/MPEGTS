@@ -313,33 +313,48 @@ namespace MPEGTS
                         ScramblingControl = (ScramblingControlEnum)enumByte;
 
                         enumByte = (b & 48) >> 4;
-                        AdaptationFieldControl = (AdaptationFieldControlEnum) enumByte;
+                        AdaptationFieldControl = (AdaptationFieldControlEnum)enumByte;
 
                         ContinuityCounter = Convert.ToByte(b & 15);
 
                         break;
                     default:
 
-                        Payload.Add(b);
+                        switch (AdaptationFieldControl)
+                        {
 
-                        if (bytePos==4)
-                        {
-                            AdaptationFieldLength = b;
-                        }
-                        if (bytePos == 5)
-                        {
-                            DiscontinuityIndicator = (b & 1) == 1;
-                            RandomAccessIndicator = (b & 2) == 2;
-                            ElementaryStreamPriorityIndicator = (b & 4) == 4;
-                            PCRFlag = (b & 8) == 8;
-                            OPCRFlag = (b & 16) == 16;
-                            SplicingPointFlag = (b & 32) == 32;
-                            TransportPrivateDataFlag = (b & 64) == 64;
-                            AdaptationFieldExtensionFlag = (b & 128) == 128;
-                        }
-                        if (PCRFlag && bytePos>5 && bytePos<12)
-                        {
-                            PCR.Add(b);
+                            case AdaptationFieldControlEnum.NoAdaptationFieldPayloadOnly:
+                                Payload.Add(b);
+                                break;
+
+                            case AdaptationFieldControlEnum.AdaptationFieldFollowedByPayload:
+                            case AdaptationFieldControlEnum.AdaptationFieldOnlyNoPayload:
+
+                                // reading Adaptation field
+                                if (bytePos == 4)
+                                {
+                                    AdaptationFieldLength = b;
+                                }
+                                if (AdaptationFieldLength > 0 && bytePos == 5)
+                                {
+                                    DiscontinuityIndicator = (b & 128) == 128;
+                                    RandomAccessIndicator = (b & 64) == 64;
+                                    ElementaryStreamPriorityIndicator = (b & 32) == 32;
+                                    PCRFlag = (b & 16) == 16;
+                                    OPCRFlag = (b & 8) == 8;
+                                    SplicingPointFlag = (b & 4) == 4;
+                                    TransportPrivateDataFlag = (b & 2) == 2;
+                                    AdaptationFieldExtensionFlag = (b & 1) == 1;
+                                }
+                                if (AdaptationFieldLength > 0 && PCRFlag && bytePos > 5 && bytePos < 12)
+                                {
+                                    PCR.Add(b);
+                                }
+                                if (AdaptationFieldControl != AdaptationFieldControlEnum.AdaptationFieldOnlyNoPayload && bytePos > 4 + AdaptationFieldLength)
+                                {
+                                    Payload.Add(b);
+                                }
+                                break;
                         }
                         break;
                 }
@@ -421,9 +436,10 @@ namespace MPEGTS
             if (pos == -1)
                 return res;
 
+            var buff = new byte[188];
+
             while (pos + 188 < endPos)
             {
-                var buff = new byte[188];
                 for (var i=0;i<188;i++)
                 {
                     buff[i] = bytes[pos + i];

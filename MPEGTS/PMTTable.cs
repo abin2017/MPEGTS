@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 
 namespace MPEGTS
@@ -10,6 +12,7 @@ namespace MPEGTS
     public class PMTTable : DVBTTable
     {
         public List<ElementaryStreamSpecificData> Streams { get; set; } = new List<ElementaryStreamSpecificData>();
+        public long PCRPID { get; set; }
 
         public override void Parse(List<byte> bytes)
         {
@@ -59,6 +62,7 @@ namespace MPEGTS
             pos = pos + 3;
 
             // reserved bits, PCR PID
+            PCRPID = Convert.ToInt32(((bytes[pos] & 31) << 8) + bytes[pos + 1]);
 
             pos = pos + 2;
 
@@ -145,6 +149,8 @@ namespace MPEGTS
                     Console.WriteLine($"LastSectionNumber      : {LastSectionNumber}");
                 }
 
+                Console.WriteLine($"PCR PID                    : {PCRPID}");
+
                 Console.WriteLine($"---- Stream:-----------------------");
                 foreach (var stream in Streams)
                 {
@@ -155,6 +161,8 @@ namespace MPEGTS
                 }
             } else
             {
+                Console.WriteLine($"PCR PID: {PCRPID,55}");
+
                 foreach (var stream in Streams)
                 {
                     Console.WriteLine($"  {stream.StreamTypeDesc.ToString().PadRight(38, ' '),38} {"".PadRight(14,' '),14} {stream.PID,8}");

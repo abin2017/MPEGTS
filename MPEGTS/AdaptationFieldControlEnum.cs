@@ -6,7 +6,7 @@ namespace MPEGTS
     {
         Unknown = 0,
         NoAdaptationFieldPayloadOnly = 1,
-        AdaptationFielOnlyNodPayload = 2,
+        AdaptationFieldOnlyNoPayload = 2,
         AdaptationFieldFollowedByPayload = 3
     }
 }

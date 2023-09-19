@@ -8,6 +8,7 @@ namespace Tests
     [TestClass]
     public class BasicTests
     {
+        // https://stackoverflow.com/questions/58716586/how-to-generate-timestamps-from-pcr-in-hex
         [TestMethod]
         public void TestPCRCalculation()
         {
