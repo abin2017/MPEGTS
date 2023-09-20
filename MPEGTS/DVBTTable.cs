@@ -24,7 +24,7 @@ namespace MPEGTS
 
         public abstract void Parse(List<byte> bytes);
 
-        public static T CreateFromPackets<T>(List<MPEGTransportStreamPacket> packets, long PID) where T : DVBTTable, new()
+        public static T CreateFromPackets<T>(IEnumerable<MPEGTransportStreamPacket> packets, long PID) where T : DVBTTable, new()
         {
             var filteredPackets = MPEGTransportStreamPacket.GetAllPacketsPayloadBytesByPID(packets, PID);
 

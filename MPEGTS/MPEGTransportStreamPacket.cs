@@ -215,7 +215,7 @@ namespace MPEGTS
             return res;
         }
 
-        public static Dictionary<int, List<byte>> GetAllPacketsPayloadBytesByPID(List<MPEGTransportStreamPacket> packets, long PID)
+        public static Dictionary<int, List<byte>> GetAllPacketsPayloadBytesByPID(IEnumerable<MPEGTransportStreamPacket> packets, long PID)
         {
             var res = new Dictionary<int, List<byte>>();
             var firstPacketFound = false;
@@ -497,6 +497,39 @@ namespace MPEGTS
             }
 
             return res;
+        }
+
+        public static PMTTable GetPMTTable(IEnumerable<MPEGTransportStreamPacket> packets, SDTTable sDTTable, PSITable pSITable)
+        {
+            var servicesMapPIDs = GetAvailableServicesMapPIDs(sDTTable, pSITable);
+
+            foreach (var kvp in servicesMapPIDs)
+            {
+                var pmtTable = DVBTTable.CreateFromPackets<PMTTable>(packets, kvp.Value);
+
+                if (pmtTable != null)
+                {
+                    return pmtTable;
+                }
+            }
+
+            return null;
+        }
+
+        public static ulong GetFirstPacketPCRTimeStamp(IEnumerable<MPEGTransportStreamPacket> packets, long PCRPID)
+        {
+            // find first packet with PCR flag
+            foreach (var packet in packets)
+            {
+                if (packet.PID == PCRPID && packet.PCRFlag)
+                {
+                    var msTime = packet.GetPCRClock().Value / 27000000;
+
+                    return msTime;
+                }
+            }
+
+            return ulong.MinValue;
         }
     }
 }

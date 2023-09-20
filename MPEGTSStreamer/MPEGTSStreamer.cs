@@ -279,8 +279,12 @@ namespace MPEGTSStreamer
             PSITable psiTable = null;
             PMTTable pmtTable = null;
 
+            long PCRPID = -1;
+
             var firstPCRTimeStamp = ulong.MinValue;
             var firstPCRTimeStampTime = DateTime.MinValue;
+
+            var lastPCRTimeStamp = ulong.MinValue;
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
             {
@@ -315,66 +319,58 @@ namespace MPEGTSStreamer
                         {
                             var packets = MPEGTransportStreamPacket.Parse(buffer, 0, bytesRead);
 
-                            /*
-                             var tdtTable = DVBTTable.CreateFromPackets<TDTTable>(packets, 20);
-                            if (tdtTable != null && tdtTable.UTCTime != DateTime.MinValue)
+                            if (PCRPID < 0)
                             {
-                                _loggingService.Debug($" .. !!!!!!!! TDT table time: {tdtTable.UTCTime}");
+                                // finding PCRPID from PMT 
 
-                                if (timeShift != TimeSpan.MinValue)
+                                if (psiTable == null)
                                 {
-                                    bufferSize = CalculateNewBufferSize(bufferSize, timeShift, tdtTable.UTCTime, lastTDTTime, loopsPerSecond);
+                                    psiTable = DVBTTable.CreateFromPackets<PSITable>(packets, 0);
                                 }
-
-                                timeShift = DateTime.Now - tdtTable.UTCTime;
-                                lastTDTTime = DateTime.Now;
-                            }
-                            */
-                            if (psiTable == null)
-                            {
-                                psiTable = DVBTTable.CreateFromPackets<PSITable>(packets, 0);
-                            }
-                            if (sDTTable == null)
-                            {
-                                sDTTable = DVBTTable.CreateFromPackets<SDTTable>(packets, 17);
-                            }
-                            if (pmtTable == null && psiTable != null && sDTTable != null)
-                            {
-                                var servicesMapPIDs = MPEGTransportStreamPacket.GetAvailableServicesMapPIDs(sDTTable, psiTable);
-
-                                foreach (var kvp in servicesMapPIDs)
+                                if (sDTTable == null)
                                 {
-                                    pmtTable = DVBTTable.CreateFromPackets<PMTTable>(packets, kvp.Value);
-
+                                    sDTTable = DVBTTable.CreateFromPackets<SDTTable>(packets, 17);
+                                }
+                                if (pmtTable == null && psiTable != null && sDTTable != null)
+                                {
+                                    pmtTable = MPEGTransportStreamPacket.GetPMTTable(packets, sDTTable, psiTable);
                                     if (pmtTable != null)
                                     {
-                                        break;
+                                        PCRPID = pmtTable.PCRPID;
                                     }
                                 }
                             }
-                            if (pmtTable != null)
+                            if (PCRPID >= 0)
                             {
-                                // find first packet with PCR flag
-                                foreach (var packet in packets)
+                                var timeStamp = MPEGTransportStreamPacket.GetFirstPacketPCRTimeStamp(packets, PCRPID);
+                                if (timeStamp != ulong.MinValue)
                                 {
-                                    if (packet.PID == pmtTable.PCRPID && packet.PCRFlag)
+                                    if (firstPCRTimeStamp == ulong.MinValue)
                                     {
-                                        var msTime = packet.GetPCRClock().Value / 27000000;
-
-                                        if (firstPCRTimeStamp == ulong.MinValue)
-                                        {
-                                            firstPCRTimeStamp = msTime;
-                                            firstPCRTimeStampTime = DateTime.Now;
-                                        } else
-                                        {
-                                            var shiftMS = Convert.ToInt32((DateTime.Now - firstPCRTimeStampTime).TotalMilliseconds - (msTime - firstPCRTimeStamp));
-
-                                            speedAndPosition += $" (PCR shift: {shiftMS})";
-                                        }
-
-                                        break;
+                                        firstPCRTimeStamp = lastPCRTimeStamp = timeStamp;
+                                        firstPCRTimeStampTime = DateTime.Now;
                                     }
-                                }
+                                    else
+                                    {
+                                        var streamTimeSpan = DateTime.Now - firstPCRTimeStampTime;
+                                        var dataTime = timeStamp - firstPCRTimeStamp;
+                                        var shift = Convert.ToInt32((streamTimeSpan).TotalSeconds - (dataTime));
+                                        //var shiftS = shiftMS / 1000.0;
+
+                                        speedAndPosition += $" (PCR: {timeStamp} s, stream time: {Convert.ToInt32(streamTimeSpan.TotalSeconds)} s, data time: {dataTime} s, shift: {shift} s)";
+
+                                        /*
+                                        var missingBytes = (shiftS / loopsPerSecond) * bufferSize;
+                                        var bytesTransfered = (timeSpanFromLastTDT.TotalSeconds / loopsPerSecond) * bufferSize;
+                                        //var bytesTransferedFromLastTDTWithMissingBytes = bytesTransferedFromLastTDT + missingBytes;
+                                        //var newBufferSize = Convert.ToInt32(bytesTransferedFromLastTDTWithMissingBytes / (timeSpanFromLastTDT.TotalSeconds / loopsPerSecond));
+
+                                        speedAndPosition += $" (missing bytes: {missingBytes})";
+                                        */
+
+                                        lastPCRTimeStamp = timeStamp;
+                                    }
+                                }                             
                             }
                         }
 
