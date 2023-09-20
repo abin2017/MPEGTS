@@ -272,16 +272,15 @@ namespace MPEGTSStreamer
             var buffer = new byte[MaxBufferSize];
             var lastSpeedCalculationTime = DateTime.MinValue;
             var lastSpeedCalculationTimeLog = DateTime.MinValue;
-            var lastTDTTime = DateTime.MinValue;
             var speedAndPosition = "";
-            var timeShift = TimeSpan.MinValue;
             var streamStartTime = DateTime.MinValue;
 
             SDTTable sDTTable = null;
             PSITable psiTable = null;
             PMTTable pmtTable = null;
 
-            var lastPCRTimeStamp = ulong.MinValue;
+            var firstPCRTimeStamp = ulong.MinValue;
+            var firstPCRTimeStampTime = DateTime.MinValue;
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
             {
@@ -316,8 +315,8 @@ namespace MPEGTSStreamer
                         {
                             var packets = MPEGTransportStreamPacket.Parse(buffer, 0, bytesRead);
 
-                            var tdtTable = DVBTTable.CreateFromPackets<TDTTable>(packets, 20);
                             /*
+                             var tdtTable = DVBTTable.CreateFromPackets<TDTTable>(packets, 20);
                             if (tdtTable != null && tdtTable.UTCTime != DateTime.MinValue)
                             {
                                 _loggingService.Debug($" .. !!!!!!!! TDT table time: {tdtTable.UTCTime}");
@@ -342,7 +341,7 @@ namespace MPEGTSStreamer
                             if (pmtTable == null && psiTable != null && sDTTable != null)
                             {
                                 var servicesMapPIDs = MPEGTransportStreamPacket.GetAvailableServicesMapPIDs(sDTTable, psiTable);
-             
+
                                 foreach (var kvp in servicesMapPIDs)
                                 {
                                     pmtTable = DVBTTable.CreateFromPackets<PMTTable>(packets, kvp.Value);
@@ -361,7 +360,18 @@ namespace MPEGTSStreamer
                                     if (packet.PID == pmtTable.PCRPID && packet.PCRFlag)
                                     {
                                         var msTime = packet.GetPCRClock().Value / 27000000;
-                                        speedAndPosition += $" (msTime: {msTime})";
+
+                                        if (firstPCRTimeStamp == ulong.MinValue)
+                                        {
+                                            firstPCRTimeStamp = msTime;
+                                            firstPCRTimeStampTime = DateTime.Now;
+                                        } else
+                                        {
+                                            var shiftMS = Convert.ToInt32((DateTime.Now - firstPCRTimeStampTime).TotalMilliseconds - (msTime - firstPCRTimeStamp));
+
+                                            speedAndPosition += $" (PCR shift: {shiftMS})";
+                                        }
+
                                         break;
                                     }
                                 }
