@@ -14,8 +14,8 @@ namespace MPEGTSStreamer
         public IPEndPoint _endPoint { get; set; }
 
         public const int UDPMTU = 1316;            // MTU => Maximum Transmission Unit (UDP mtu is limited in VLC 3.0 to 1316)
-        private const int MinBufferSize = 50;      // ~  2 kb/s
-        private const int MaxBufferSize = 1250000; // ~ 50 Mb/s
+        private const int MinBufferSize = 188*20;
+        private const int MaxBufferSize = 1250000;
 
         private UdpClient _UDPClient = null;
         private ILoggingService _loggingService = new BasicLoggingService();
@@ -82,7 +82,7 @@ namespace MPEGTSStreamer
             return $"{(totalBytesRead / (totalLength / 100.00)).ToString("N2")}% ";
         }
 
-        private int FindSyncBytePosition(FileStream fs)
+        private static int FindSyncBytePosition(FileStream fs)
         {
             if (!fs.CanRead)
                 return -1;
@@ -206,6 +206,58 @@ namespace MPEGTSStreamer
             return bytes.ToString(frm) + " B";
         }
 
+        private long FindPCRPID(string fileName)
+        {
+            _loggingService.Info($"Finding PCRID...");
+
+            SDTTable sDTTable = null;
+            PSITable psiTable = null;
+            PMTTable pmtTable = null;
+
+            var allPackets = new List<MPEGTransportStreamPacket>();
+
+            var bufferSize = 188 * 1000;
+            var buffer = new byte[bufferSize];
+
+            using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+            {
+                FindSyncBytePosition(fs);
+
+                while (fs.CanRead && fs.Position+bufferSize < fs.Length)
+                {
+                        var bytesRead = fs.Read(buffer, 0, bufferSize);
+
+                        if (bytesRead == bufferSize)
+                        {
+                            var packets = MPEGTransportStreamPacket.Parse(buffer);
+                            allPackets.AddRange(packets);
+
+                            if (psiTable == null)
+                            {
+                                psiTable = DVBTTable.CreateFromPackets<PSITable>(allPackets, 0);
+                            }
+                            if (sDTTable == null)
+                            {
+                                sDTTable = DVBTTable.CreateFromPackets<SDTTable>(allPackets, 17);
+                            }
+                            if (pmtTable == null && psiTable != null && sDTTable != null)
+                            {
+                                pmtTable = MPEGTransportStreamPacket.GetPMTTable(allPackets, sDTTable, psiTable);
+                                if (pmtTable != null)
+                                {
+                                    return pmtTable.PCRPID;
+                                }
+                            }
+                        } else
+                        {
+                            return -1;
+                        }
+                }
+            }
+
+            return -1;
+        }
+
         /// <summary>
         /// Stream file to UDP
         /// </summary>
@@ -213,17 +265,20 @@ namespace MPEGTSStreamer
         /// <param name="initialMegaBitsSpeed">Initial Mb/s speed fro streaming</param>
         /// <param name="loopsPerSecond">Data read & send interval per second</param>
         /// <param name="speedCorectionSecondsInterval">Data speed correction interval in seconds</param>
-        public void Stream(string fileName, double initialMegaBitsSpeed = 4.0, double loopsPerSecond = 20, double speedCorectionSecondsInterval = 2)
+        public void Stream(string fileName, double initialMegaBitsSpeed = 4.0, double loopsPerSecond = 10, double speedCorectionSecondsInterval = 5)
         {
             _loggingService.Info($"Streaming file: {fileName}");
 
+            var PCRPID = FindPCRPID(fileName);
+            _loggingService.Info($"...{PCRPID}");
+
+            if (PCRPID == -1)
+            {
+                throw new Exception("No PCR PID found");
+            }
+
             var bufferSize = GetCorrectedBufferSize(Convert.ToInt32((initialMegaBitsSpeed * 1000000 / 8) / loopsPerSecond));
-
             var buffer = new byte[MaxBufferSize];            // buffer size for every 1/loopsPerSecond per second
-            var bufferForStreamAnalyzation = new List<byte>(); // when using too high loopsPerSecond, SDT table cannot be read, because it's spreaded into more packets,
-                                                               // buffer for analuzation must be bigger then buffer for 1/loopsPerSecond
-
-           // List<MPEGTransportStreamPacket> packets = null;
             int bytesRead = 0;
 
             var lastReadAndSendTime = DateTime.MinValue; // occurs every 1/loopsPerSecond per second
@@ -231,15 +286,10 @@ namespace MPEGTSStreamer
 
             var lastSpeedCalculationLogTime = DateTime.MinValue;
             var speedAndPosition = "";
+            var PCR = "";
 
             var firstPCRTimeStamp = ulong.MinValue;
             var firstPCRTimeStampTime = DateTime.MinValue;
-
-            SDTTable sDTTable = null;
-            PSITable psiTable = null;
-            PMTTable pmtTable = null;
-
-            long PCRPID = -1;
 
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
             {
@@ -252,59 +302,25 @@ namespace MPEGTSStreamer
                 {
                     if ((DateTime.Now - lastReadAndSendTime).TotalMilliseconds > (1000/ loopsPerSecond))
                     {
-                        // calculate speed & progress
-
-                        lastReadAndSendTime = DateTime.Now;
-
-                        speedAndPosition = GetComputedSProgress(totalBytesRead, fs.Length) + " " + GetHumanReadableSize((bufferSize * loopsPerSecond) * 8, true)+"/sec";
-
                         // reading data
 
                         bytesRead = fs.Read(buffer, 0, bufferSize);
-
                         totalBytesRead += bytesRead;
 
                         // sending data to UDP
 
                         SendByteArray(buffer, bytesRead);
 
-                        // calculating buffer size for balancing bitrate
+                        // logging progress
 
-                        if (bytesRead>0 && PCRPID < 0)
-                        {
-                            var byteArray = new byte[bytesRead];
-                            Buffer.BlockCopy(buffer, 0, byteArray, 0, bytesRead);
-
-                            bufferForStreamAnalyzation.AddRange(byteArray);
-                            var packets = MPEGTransportStreamPacket.Parse(bufferForStreamAnalyzation);
-
-                            // finding PCRPID from PMT
-
-                            if (psiTable == null)
-                            {
-                                psiTable = DVBTTable.CreateFromPackets<PSITable>(packets, 0);
-                            }
-                            if (sDTTable == null)
-                            {
-                                sDTTable = DVBTTable.CreateFromPackets<SDTTable>(packets, 17);
-                            }
-                            if (pmtTable == null && psiTable != null && sDTTable != null)
-                            {
-                                pmtTable = MPEGTransportStreamPacket.GetPMTTable(packets, sDTTable, psiTable);
-                                if (pmtTable != null)
-                                {
-                                    PCRPID = pmtTable.PCRPID;
-                                    bufferForStreamAnalyzation.Clear();
-                                }
-                            }
-
-                        }
-
+                        speedAndPosition = GetComputedSProgress(totalBytesRead, fs.Length) + " " + GetHumanReadableSize((bufferSize * loopsPerSecond) * 8, true) + "/sec";
                         speedAndPosition += $" (exec time: {((DateTime.Now - lastReadAndSendTime).TotalMilliseconds).ToString("N2")} ms)";
                         speedAndPosition += $" bytes per 1/{loopsPerSecond} sec: {GetHumanReadableSize(bytesRead)}";
+
+                        lastReadAndSendTime = DateTime.Now;
                     }
 
-                    if ((DateTime.Now - lastSpeedCorrectionTime).TotalSeconds > speedCorectionSecondsInterval)
+                    if ((DateTime.Now - lastSpeedCorrectionTime).TotalSeconds >= speedCorectionSecondsInterval)
                     {
                         // speed correction
 
@@ -325,12 +341,35 @@ namespace MPEGTSStreamer
                                     var streamTimeSpan = DateTime.Now - firstPCRTimeStampTime;
                                     var dataTime = timeStamp - firstPCRTimeStamp;
                                     var shift = (streamTimeSpan).TotalSeconds - (dataTime);
-                                    var speedCorrectionLShiftPerSec = shift / (streamTimeSpan).TotalSeconds;
-                                    var missingBytesForWholeStream = Math.Round((speedCorrectionLShiftPerSec / loopsPerSecond) * bufferSize, 2);
+                                    //var speedCorrectionLShiftPerSec = shift / (streamTimeSpan).TotalSeconds;
+                                    var missingBytesForWholeStream = Math.Round((shift / loopsPerSecond) * bufferSize, 2);
+                                    PCR = $" (PCR time shift: {Math.Round(shift, 2).ToString("N2")} s, missingBytes: {GetHumanReadableSize(missingBytesForWholeStream)})";
 
-                                    speedAndPosition += $" (PCR time shift: {Math.Round(shift, 2).ToString("N2")} s)";
+                                    var newBufferSize = GetCorrectedBufferSize(Convert.ToInt32(bufferSize + missingBytesForWholeStream));
 
-                                    bufferSize = GetCorrectedBufferSize(Convert.ToInt32(bufferSize + missingBytesForWholeStream));
+                                    if (newBufferSize > bufferSize)
+                                    {
+                                        if (newBufferSize > MaxBufferSize)
+                                        {
+                                            PCR += $" cannot increase buffer to {GetHumanReadableSize(newBufferSize)}";
+                                            newBufferSize = MaxBufferSize;
+                                        }
+
+                                        PCR += $" >>> {GetHumanReadableSize(newBufferSize)}";
+
+                                    } else
+                                    if (newBufferSize < bufferSize)
+                                    {
+                                        if (newBufferSize < MinBufferSize)
+                                        {
+                                            PCR += $" cannot decrease buffer to {GetHumanReadableSize(newBufferSize)}";
+                                            newBufferSize = MinBufferSize;
+                                        }
+
+                                        PCR += $" <<< {GetHumanReadableSize(newBufferSize)}";
+                                    }
+
+                                    bufferSize = GetCorrectedBufferSize(Convert.ToInt32(newBufferSize));
                                 }
                             }
                         }
@@ -343,7 +382,7 @@ namespace MPEGTSStreamer
                         // logging
 
                         lastSpeedCalculationLogTime = DateTime.Now;
-                        _loggingService.Debug($"Streaming {Path.GetFileName(fileName)}: {GetHumanReadableTimeSpan(DateTime.Now - streamStartTime)} {speedAndPosition}");
+                        _loggingService.Debug($"Streaming {Path.GetFileName(fileName)}: {GetHumanReadableTimeSpan(DateTime.Now - streamStartTime)} {speedAndPosition} {PCR}");
                     }
                 }
             }
