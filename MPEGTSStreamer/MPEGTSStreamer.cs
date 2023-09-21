@@ -213,15 +213,17 @@ namespace MPEGTSStreamer
         /// <param name="initialMegaBitsSpeed">Initial Mb/s speed fro streaming</param>
         /// <param name="loopsPerSecond">Data read & send interval per second</param>
         /// <param name="speedCorectionSecondsInterval">Data speed correction interval in seconds</param>
-        public void Stream(string fileName, double initialMegaBitsSpeed = 4.0, double loopsPerSecond = 4, double speedCorectionSecondsInterval = 2)
+        public void Stream(string fileName, double initialMegaBitsSpeed = 4.0, double loopsPerSecond = 20, double speedCorectionSecondsInterval = 2)
         {
             _loggingService.Info($"Streaming file: {fileName}");
 
             var bufferSize = GetCorrectedBufferSize(Convert.ToInt32((initialMegaBitsSpeed * 1000000 / 8) / loopsPerSecond));
 
             var buffer = new byte[MaxBufferSize];            // buffer size for every 1/loopsPerSecond per second
+            var bufferForStreamAnalyzation = new List<byte>(); // when using too high loopsPerSecond, SDT table cannot be read, because it's spreaded into more packets,
+                                                               // buffer for analuzation must be bigger then buffer for 1/loopsPerSecond
 
-            List<MPEGTransportStreamPacket> packets = null;
+           // List<MPEGTransportStreamPacket> packets = null;
             int bytesRead = 0;
 
             var lastReadAndSendTime = DateTime.MinValue; // occurs every 1/loopsPerSecond per second
@@ -262,16 +264,20 @@ namespace MPEGTSStreamer
 
                         totalBytesRead += bytesRead;
 
-                        packets = MPEGTransportStreamPacket.Parse(buffer, 0, bytesRead);
-
                         // sending data to UDP
 
                         SendByteArray(buffer, bytesRead);
 
                         // calculating buffer size for balancing bitrate
 
-                        if (bytesRead > 0 && PCRPID < 0)
+                        if (bytesRead>0 && PCRPID < 0)
                         {
+                            var byteArray = new byte[bytesRead];
+                            Buffer.BlockCopy(buffer, 0, byteArray, 0, bytesRead);
+
+                            bufferForStreamAnalyzation.AddRange(byteArray);
+                            var packets = MPEGTransportStreamPacket.Parse(bufferForStreamAnalyzation);
+
                             // finding PCRPID from PMT
 
                             if (psiTable == null)
@@ -288,8 +294,10 @@ namespace MPEGTSStreamer
                                 if (pmtTable != null)
                                 {
                                     PCRPID = pmtTable.PCRPID;
+                                    bufferForStreamAnalyzation.Clear();
                                 }
                             }
+
                         }
 
                         speedAndPosition += $" (exec time: {((DateTime.Now - lastReadAndSendTime).TotalMilliseconds).ToString("N2")} ms)";
@@ -302,6 +310,8 @@ namespace MPEGTSStreamer
 
                         if (bytesRead > 0 && PCRPID >= 0)
                         {
+                            var packets = MPEGTransportStreamPacket.Parse(buffer, 0, bytesRead);
+
                             var timeStamp = MPEGTransportStreamPacket.GetFirstPacketPCRTimeStamp(packets, PCRPID);
                             if (timeStamp != ulong.MinValue)
                             {
@@ -316,7 +326,7 @@ namespace MPEGTSStreamer
                                     var dataTime = timeStamp - firstPCRTimeStamp;
                                     var shift = (streamTimeSpan).TotalSeconds - (dataTime);
                                     var speedCorrectionLShiftPerSec = shift / (streamTimeSpan).TotalSeconds;
-                                    var missingBytesForWholeStream  = Math.Round((speedCorrectionLShiftPerSec / loopsPerSecond) * bufferSize,2);
+                                    var missingBytesForWholeStream = Math.Round((speedCorrectionLShiftPerSec / loopsPerSecond) * bufferSize, 2);
 
                                     speedAndPosition += $" (PCR time shift: {Math.Round(shift, 2).ToString("N2")} s)";
 

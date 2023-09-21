@@ -113,8 +113,7 @@ namespace MPEGTS
 
             if (SectionLength > bytes.Count)
             {
-                Console.WriteLine("SDT: bad SectionLength!");
-                return;
+                throw new Exception("SDT: bad SectionLength!");
             }
 
             Data = new byte[SectionLength];
