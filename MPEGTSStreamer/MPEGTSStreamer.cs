@@ -263,14 +263,27 @@ namespace MPEGTSStreamer
             return res;
         }
 
-        public void Stream(string fileName, double initialMegaBitsSpeed = 4.0, double loopsPerSecond = 3)
+        /// <summary>
+        /// Stream file to UDP
+        /// </summary>
+        /// <param name="fileName">Full file name</param>
+        /// <param name="initialMegaBitsSpeed">Initial Mb/s speed fro streaming</param>
+        /// <param name="loopsPerSecond">Data read & send interval per second</param>
+        /// <param name="speedCorectionSecondsInterval">Data speed correction interval in seconds</param>
+        public void Stream(string fileName, double initialMegaBitsSpeed = 4.0, double loopsPerSecond = 3, double speedCorectionSecondsInterval = 5)
         {
             _loggingService.Info($"Streaming file: {fileName}");
 
             var bufferSize = GetCorrectedBufferSize(Convert.ToInt32((initialMegaBitsSpeed * 1000000 / 8) / loopsPerSecond));
 
-            var buffer = new byte[MaxBufferSize];
-            var lastSpeedCalculationTime = DateTime.MinValue;
+            var buffer = new byte[MaxBufferSize];            // buffer size for every 1/loopsPerSecond per second
+
+            List<MPEGTransportStreamPacket> packets = null;
+            int bytesRead = 0;
+
+           var lastReadAndSendTimeLoop = DateTime.MinValue; // occurs every 1/loopsPerSecond per second
+            var lastSpeedCorrectionTime = DateTime.MinValue; // occurs every speedCorectionSecondsInterval second
+
             var lastSpeedCalculationTimeLog = DateTime.MinValue;
             var speedAndPosition = "";
             var streamStartTime = DateTime.MinValue;
@@ -295,19 +308,21 @@ namespace MPEGTSStreamer
                 var totalBytesRead = 0;
                 while (fs.CanRead && totalBytesRead < fs.Length)
                 {
-                    if ((DateTime.Now - lastSpeedCalculationTime).TotalMilliseconds > (1000/ loopsPerSecond))
+                    if ((DateTime.Now - lastReadAndSendTimeLoop).TotalMilliseconds > (1000/ loopsPerSecond))
                     {
                         // calculate speed & progress
 
-                        lastSpeedCalculationTime = DateTime.Now;
+                        lastReadAndSendTimeLoop = DateTime.Now;
 
                         speedAndPosition = GetComputedSProgress(totalBytesRead, fs.Length) + " " + GetHumanReadableSize((bufferSize * loopsPerSecond) * 8, true)+"/sec";
 
                         // reading data
 
-                        var bytesRead = fs.Read(buffer, 0, bufferSize);
+                        bytesRead = fs.Read(buffer, 0, bufferSize);
 
                         totalBytesRead += bytesRead;
+
+                        packets = MPEGTransportStreamPacket.Parse(buffer, 0, bytesRead);
 
                         // sending data to UDP
 
@@ -315,67 +330,68 @@ namespace MPEGTSStreamer
 
                         // calculating buffer size for balancing bitrate
 
-                        if (bytesRead > 0)
+                        if (bytesRead > 0 && PCRPID < 0)
                         {
-                            var packets = MPEGTransportStreamPacket.Parse(buffer, 0, bytesRead);
+                            // finding PCRPID from PMT
 
-                            if (PCRPID < 0)
+                            if (psiTable == null)
                             {
-                                // finding PCRPID from PMT 
-
-                                if (psiTable == null)
-                                {
-                                    psiTable = DVBTTable.CreateFromPackets<PSITable>(packets, 0);
-                                }
-                                if (sDTTable == null)
-                                {
-                                    sDTTable = DVBTTable.CreateFromPackets<SDTTable>(packets, 17);
-                                }
-                                if (pmtTable == null && psiTable != null && sDTTable != null)
-                                {
-                                    pmtTable = MPEGTransportStreamPacket.GetPMTTable(packets, sDTTable, psiTable);
-                                    if (pmtTable != null)
-                                    {
-                                        PCRPID = pmtTable.PCRPID;
-                                    }
-                                }
+                                psiTable = DVBTTable.CreateFromPackets<PSITable>(packets, 0);
                             }
-                            if (PCRPID >= 0)
+                            if (sDTTable == null)
                             {
-                                var timeStamp = MPEGTransportStreamPacket.GetFirstPacketPCRTimeStamp(packets, PCRPID);
-                                if (timeStamp != ulong.MinValue)
+                                sDTTable = DVBTTable.CreateFromPackets<SDTTable>(packets, 17);
+                            }
+                            if (pmtTable == null && psiTable != null && sDTTable != null)
+                            {
+                                pmtTable = MPEGTransportStreamPacket.GetPMTTable(packets, sDTTable, psiTable);
+                                if (pmtTable != null)
                                 {
-                                    if (firstPCRTimeStamp == ulong.MinValue)
-                                    {
-                                        firstPCRTimeStamp = lastPCRTimeStamp = timeStamp;
-                                        firstPCRTimeStampTime = DateTime.Now;
-                                    }
-                                    else
-                                    {
-                                        var streamTimeSpan = DateTime.Now - firstPCRTimeStampTime;
-                                        var dataTime = timeStamp - firstPCRTimeStamp;
-                                        var shift = Convert.ToInt32((streamTimeSpan).TotalSeconds - (dataTime));
-                                        //var shiftS = shiftMS / 1000.0;
-
-                                        speedAndPosition += $" (PCR: {timeStamp} s, stream time: {Convert.ToInt32(streamTimeSpan.TotalSeconds)} s, data time: {dataTime} s, shift: {shift} s)";
-
-                                        /*
-                                        var missingBytes = (shiftS / loopsPerSecond) * bufferSize;
-                                        var bytesTransfered = (timeSpanFromLastTDT.TotalSeconds / loopsPerSecond) * bufferSize;
-                                        //var bytesTransferedFromLastTDTWithMissingBytes = bytesTransferedFromLastTDT + missingBytes;
-                                        //var newBufferSize = Convert.ToInt32(bytesTransferedFromLastTDTWithMissingBytes / (timeSpanFromLastTDT.TotalSeconds / loopsPerSecond));
-
-                                        speedAndPosition += $" (missing bytes: {missingBytes})";
-                                        */
-
-                                        lastPCRTimeStamp = timeStamp;
-                                    }
-                                }                             
+                                    PCRPID = pmtTable.PCRPID;
+                                }
                             }
                         }
 
-                        speedAndPosition += $" (exec time: {((DateTime.Now - lastSpeedCalculationTime).TotalMilliseconds).ToString("N2")} ms)";
+                        speedAndPosition += $" (exec time: {((DateTime.Now - lastReadAndSendTimeLoop).TotalMilliseconds).ToString("N2")} ms)";
                         speedAndPosition += $" bytes per 1/{loopsPerSecond} sec: {GetHumanReadableSize(bytesRead)}";
+                    }
+
+                    if ((DateTime.Now - lastSpeedCorrectionTime).TotalSeconds > speedCorectionSecondsInterval)
+                    {
+                        // speed correction
+
+                        if (bytesRead > 0 && PCRPID >= 0)
+                        {
+                            var timeStamp = MPEGTransportStreamPacket.GetFirstPacketPCRTimeStamp(packets, PCRPID);
+                            if (timeStamp != ulong.MinValue)
+                            {
+                                if (firstPCRTimeStamp == ulong.MinValue)
+                                {
+                                    firstPCRTimeStamp = lastPCRTimeStamp = timeStamp;
+                                    firstPCRTimeStampTime = DateTime.Now;
+                                }
+                                else
+                                {
+                                    var streamTimeSpan = DateTime.Now - firstPCRTimeStampTime;
+                                    var dataTime = timeStamp - firstPCRTimeStamp;
+                                    var shift = (streamTimeSpan).TotalSeconds - (dataTime);
+
+                                    var speedCorrectionLoopDataTime = timeStamp - lastPCRTimeStamp; // should by equal to speedCorectionSecondsInterval
+                                    var speedCorrectionLoopDataTimeShift = speedCorectionSecondsInterval - speedCorrectionLoopDataTime;
+
+                                    var speedCorrectionLoopDataTimeShiftPerSec = speedCorrectionLoopDataTimeShift / speedCorectionSecondsInterval;
+                                    var missingBytes = (speedCorrectionLoopDataTimeShiftPerSec / loopsPerSecond) * bufferSize;
+
+                                    speedAndPosition += $" (PCR: {timeStamp} s, stream time: {Convert.ToInt32(streamTimeSpan.TotalSeconds)} s, data time: {dataTime} s, shift: {Math.Round(shift, 2).ToString("N2")} s, 1LoopShift: {speedCorrectionLoopDataTimeShift}, missingBytes: {missingBytes})";
+
+                                    bufferSize = GetCorrectedBufferSize(Convert.ToInt32(bufferSize + missingBytes));
+
+                                    lastPCRTimeStamp = timeStamp;
+                                }
+                            }
+                        }
+
+                        lastSpeedCorrectionTime = DateTime.Now;
                     }
 
                     if ((DateTime.Now - lastSpeedCalculationTimeLog).TotalMilliseconds > 1000)
