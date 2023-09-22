@@ -387,5 +387,83 @@ namespace MPEGTSStreamer
                 }
             }
         }
+
+        public Dictionary<ulong,double> ScanBitRate(string fileName, Action<double> percentChanged = null,  int MBsToRead = 10)
+        {
+            _loggingService.Info($"Scanning bitrate: file: {fileName}");
+
+            var PCRPID = FindPCRPID(fileName);
+            _loggingService.Info($"...{PCRPID}");
+
+            if (PCRPID == -1)
+            {
+                throw new Exception("No PCR PID found");
+            }
+
+            var res = new Dictionary<ulong, double>();
+
+            var timeStampPcaketsCount = new Dictionary<ulong, int>();
+
+            var bufferSize = 188 * 1000;
+            var buffer = new byte[bufferSize];
+
+            using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+            {
+                if (fs.Length == 0)
+                    throw new Exception("No data");
+
+                var maxStreamPos =Convert.ToInt64(MBsToRead) * 1000000;
+                if (maxStreamPos>fs.Length)
+                {
+                    maxStreamPos = fs.Length;
+                }
+
+                ulong lastTimeStamp = ulong.MinValue;
+                long currentTimeStampReadBytes = 0;
+
+                FindSyncBytePosition(fs);
+
+                while (fs.CanRead && fs.Position + bufferSize < maxStreamPos)
+                {
+                    if (percentChanged != null)
+                    {
+                        var perc = fs.Position / (maxStreamPos / 100.00);
+                        percentChanged(perc);
+                    }
+
+                    // reading data
+                    var bytesRead = fs.Read(buffer, 0, bufferSize);
+                    currentTimeStampReadBytes += bytesRead;
+
+                    if (bytesRead == bufferSize)
+                    {
+                        var packets = MPEGTransportStreamPacket.Parse(buffer, 0, bytesRead);
+                        var timeStamp = MPEGTransportStreamPacket.GetFirstPacketPCRTimeStamp(packets, PCRPID);
+
+                        if (timeStamp != ulong.MinValue && timeStamp != lastTimeStamp)
+                        {
+                            if (lastTimeStamp != ulong.MinValue)
+                            {
+                                var bitrate = currentTimeStampReadBytes * 8.0 / 1000000.0;
+                                res.Add(lastTimeStamp, bitrate);
+                                currentTimeStampReadBytes = 0;
+                            }
+
+                            lastTimeStamp = timeStamp;
+                        }
+                    } else
+                    {
+                        throw new Exception("No data");
+                    }
+                }
+            }
+
+            if (percentChanged != null)
+            {
+                percentChanged(100.00);
+            }
+
+            return res;
+        }
     }
 }

@@ -438,7 +438,7 @@ namespace MPEGTS
 
             var buff = new byte[188];
 
-            while (pos + 188 < endPos)
+            while (pos + 188 <= endPos)
             {
                 for (var i=0;i<188;i++)
                 {

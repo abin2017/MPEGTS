@@ -34,7 +34,24 @@ namespace MPEGTSStreamer
                 streamer.SetEndpoint("127.0.0.1:1234");
             }
 
-            streamer.Stream(args[0]);
+            //streamer.Stream(args[0]);
+
+
+            var bitRate = streamer.ScanBitRate(args[0], (percent) =>
+            {
+                Console.WriteLine($"Scanning bitrate: {percent:0.##}%");
+            }, 100);
+
+
+            foreach (var kvp in bitRate)
+            {
+                Console.WriteLine($"timestamp:{kvp.Key}, bitrate: {kvp.Value.ToString("N2")} Mb/s");
+            }
+
+
+            Console.WriteLine();
+            Console.WriteLine($"press ENTER");
+            Console.ReadLine();
         }
 
         public static void Help()
