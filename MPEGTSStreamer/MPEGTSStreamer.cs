@@ -265,7 +265,7 @@ namespace MPEGTSStreamer
         /// <param name="initialMegaBitsSpeed">Initial Mb/s speed fro streaming</param>
         /// <param name="loopsPerSecond">Data read & send interval per second</param>
         /// <param name="speedCorectionSecondsInterval">Data speed correction interval in seconds</param>
-        public void Stream(string fileName, double initialMegaBitsSpeed = 4.0, double loopsPerSecond = 10, double speedCorectionSecondsInterval = 5)
+        public void Stream(string fileName, double loopsPerSecond = 10, double speedCorectionSecondsInterval = 5)
         {
             _loggingService.Info($"Streaming file: {fileName}");
 
@@ -275,6 +275,18 @@ namespace MPEGTSStreamer
             if (PCRPID == -1)
             {
                 throw new Exception("No PCR PID found");
+            }
+
+            double initialMegaBitsSpeed = 4; // MB/s
+
+            var bitRateData = ScanBitRate(fileName);
+            if (bitRateData != null && bitRateData.Count>0)
+            {
+                foreach (var kvp in bitRateData)
+                {
+                    initialMegaBitsSpeed = kvp.Value;
+                    break;
+                }
             }
 
             var bufferSize = GetCorrectedBufferSize(Convert.ToInt32((initialMegaBitsSpeed * 1000000 / 8) / loopsPerSecond));
