@@ -338,20 +338,19 @@ namespace MPEGTSStreamer
 
                         if (bytesRead > 0 && PCRPID >= 0)
                         {
-                            var packets = MPEGTransportStreamPacket.Parse(buffer, 0, bytesRead);
+                            var timeStamp = MPEGTransportStreamPacket.GetFirstPCRClock(PCRPID, buffer, 0);
 
-                            var timeStamp = MPEGTransportStreamPacket.GetFirstPacketPCRTimeStamp(packets, PCRPID);
-                            if (timeStamp != ulong.MinValue)
+                            if (timeStamp.HasValue && timeStamp.Value != ulong.MinValue)
                             {
                                 if (firstPCRTimeStamp == ulong.MinValue)
                                 {
-                                    firstPCRTimeStamp = timeStamp;
+                                    firstPCRTimeStamp = timeStamp.Value;
                                     firstPCRTimeStampTime = DateTime.Now;
                                 }
                                 else
                                 {
                                     var streamTimeSpan = DateTime.Now - firstPCRTimeStampTime;
-                                    var dataTime = timeStamp - firstPCRTimeStamp;
+                                    var dataTime = timeStamp.Value - firstPCRTimeStamp;
                                     var shift = (streamTimeSpan).TotalSeconds - (dataTime);
                                     //var speedCorrectionLShiftPerSec = shift / (streamTimeSpan).TotalSeconds;
                                     var missingBytesForWholeStream = Math.Round((shift / loopsPerSecond) * bufferSize, 2);
@@ -414,8 +413,6 @@ namespace MPEGTSStreamer
 
             var res = new Dictionary<ulong, double>();
 
-            var timeStampPcaketsCount = new Dictionary<ulong, int>();
-
             var bufferSize = 188 * 1000;
             var buffer = new byte[bufferSize];
 
@@ -449,8 +446,7 @@ namespace MPEGTSStreamer
 
                     if (bytesRead == bufferSize)
                     {
-                        var packets = MPEGTransportStreamPacket.Parse(buffer, 0, bytesRead);
-                        var timeStamp = MPEGTransportStreamPacket.GetFirstPacketPCRTimeStamp(packets, PCRPID);
+                        var timeStamp = MPEGTransportStreamPacket.GetFirstPCRClock(PCRPID, buffer, 0);
 
                         if (timeStamp != ulong.MinValue && timeStamp != lastTimeStamp)
                         {
@@ -461,7 +457,7 @@ namespace MPEGTSStreamer
                                 currentTimeStampReadBytes = 0;
                             }
 
-                            lastTimeStamp = timeStamp;
+                            lastTimeStamp = timeStamp.Value;
                         }
                     } else
                     {

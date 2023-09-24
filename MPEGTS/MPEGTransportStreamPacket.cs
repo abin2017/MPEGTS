@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace MPEGTS
@@ -114,6 +115,11 @@ namespace MPEGTS
                 return null;
             }
 
+            return GetPCRClock(PCR);
+        }
+
+        public static ulong GetPCRClock(List<byte> PCR)
+        {
             ulong pcrBase = ((ulong)PCR[0] << 25) | ((ulong)PCR[1] << 17) | ((ulong)PCR[2] << 9) | (ulong)(PCR[3] << 1) | (ulong)(PCR[4] >> 7);
             ulong pcrExtension = (ulong)(PCR[4] & 0x01) << 8 | PCR[5];
             ulong pcrValue = (pcrBase * 300) + pcrExtension;
@@ -282,6 +288,56 @@ namespace MPEGTS
             }
 
             return result;
+        }
+
+        public static ulong? GetFirstPCRClock(long PID, byte[] buffer, int offset = 0)
+        {
+            while (offset + 188 < buffer.Length)
+            {
+                var syncByte = buffer[offset];
+
+                if (syncByte != MPEGTSSyncByte)
+                {
+                    throw new Exception("invalid packet, sync byte found");
+                }
+
+                var packetPID = ((buffer[offset + 1] & 31) << 8) + buffer[offset + 2];
+
+                if (packetPID == PID)
+                {
+                    var adaptationFieldControl = (AdaptationFieldControlEnum)((buffer[offset + 3] & 48) >> 4);
+
+                    if (adaptationFieldControl == AdaptationFieldControlEnum.AdaptationFieldFollowedByPayload ||
+                        adaptationFieldControl == AdaptationFieldControlEnum.AdaptationFieldOnlyNoPayload)
+                    {
+                        var adaptationFieldLength = buffer[offset + 4];
+                        if (adaptationFieldLength > 6)  // 1 for flag, 6 for PCR
+                        {
+                            var PCRFlag = (buffer[offset + 5] & 16) == 16;
+                            if (PCRFlag)
+                            {
+                                var pcr = new List<byte>()
+                                {
+                                    buffer[offset + 6],
+                                    buffer[offset + 7],
+                                    buffer[offset + 8],
+                                    buffer[offset + 9],
+                                    buffer[offset + 10],
+                                    buffer[offset + 11]
+                                };
+
+                                var clock = GetPCRClock(pcr);
+                                return clock / 27000000;
+                            }
+
+                        }
+                    }
+                }
+
+                offset += 188;
+            }
+
+            return null;
         }
 
         public void ParseBytes(IEnumerable<byte> bytes)
