@@ -38,6 +38,7 @@ namespace MPEGTS
         public byte ContinuityCounter { get; set; }
 
         public List<byte> Payload { get; set; } = new List<byte>();
+        public List<byte> AdaptationFiled { get; set; } = new List<byte>();
 
         public static void WriteByteArrayToConsole(byte[] bytes)
         {
@@ -406,10 +407,15 @@ namespace MPEGTS
                                 {
                                     PCR.Add(b);
                                 }
+
                                 if (AdaptationFieldControl != AdaptationFieldControlEnum.AdaptationFieldOnlyNoPayload && bytePos > 4 + AdaptationFieldLength)
                                 {
                                     Payload.Add(b);
+                                } else
+                                {
+                                    AdaptationFiled.Add(b);
                                 }
+
                                 break;
                         }
                         break;

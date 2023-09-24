@@ -7,7 +7,7 @@ using System.IO;
 namespace Tests
 {
     [TestClass]
-    public class BasicTests
+    public class PCRTests
     {
         // https://stackoverflow.com/questions/58716586/how-to-generate-timestamps-from-pcr-in-hex
         [TestMethod]
@@ -20,7 +20,6 @@ namespace Tests
             Assert.AreEqual(Convert.ToUInt64(0x2014CE), pcrValue);
         }
 
-        // https://stackoverflow.com/questions/58716586/how-to-generate-timestamps-from-pcr-in-hex
         [TestMethod]
         public void TestPacketPCRCalculation()
         {

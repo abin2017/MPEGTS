@@ -265,7 +265,7 @@ namespace MPEGTSStreamer
         /// <param name="initialMegaBitsSpeed">Initial Mb/s speed fro streaming</param>
         /// <param name="loopsPerSecond">Data read & send interval per second</param>
         /// <param name="speedCorectionSecondsInterval">Data speed correction interval in seconds</param>
-        public void Stream(string fileName, double loopsPerSecond = 10, double speedCorectionSecondsInterval = 5)
+        public void Stream(string fileName, double loopsPerSecond = 3, double speedCorectionSecondsInterval = 4)
         {
             _loggingService.Info($"Streaming file: {fileName}");
 
@@ -379,6 +379,20 @@ namespace MPEGTSStreamer
 
                                         PCR += $" <<< {GetHumanReadableSize(newBufferSize)}";
                                     }
+
+                                    // calculate percentage change
+                                    var diff = newBufferSize - bufferSize;
+                                    var percChange = diff / (bufferSize/100.0);
+
+                                    PCR += $" %%% change: {percChange.ToString("N2")}";
+
+                                    if (Math.Abs(percChange) > 25)
+                                    {
+                                        PCR += $"  TOO HIGH !!";
+                                        newBufferSize = bufferSize + Convert.ToInt32(Math.Sign(percChange) *0.25*bufferSize);
+                                    }
+
+                                    PCR += $" %%% change: {percChange.ToString("N2")}";
 
                                     bufferSize = GetCorrectedBufferSize(Convert.ToInt32(newBufferSize));
                                 }
