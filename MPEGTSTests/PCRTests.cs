@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MPEGTS;
 using System;
 using System.Collections.Generic;
@@ -35,7 +35,7 @@ namespace Tests
         [TestMethod]
         public void TestPCRLoadFromByteArray()
         {
-            using (var fs = new FileStream("TestData\\PCRPackets.bin", FileMode.Open))
+            using (var fs = new FileStream($"TestData{Path.DirectorySeparatorChar}PCRPackets.bin", FileMode.Open))
             {
                 var bufferSize = 188 * 10;
                 var buffer = new byte[bufferSize];
