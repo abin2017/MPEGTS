@@ -375,6 +375,14 @@ namespace MPEGTS
 
                         ContinuityCounter = Convert.ToByte(b & 15);
 
+                        //if (PID == 18)
+                        //{
+                        //    using (var fs = new FileStream(@"c:\temp\EIT.bin", FileMode.Append, FileAccess.Write))
+                        //    {
+                        //        fs.Write(bytes.ToArray(), 0, 188);
+                        //    }
+                        //}
+
                         break;
                     default:
 

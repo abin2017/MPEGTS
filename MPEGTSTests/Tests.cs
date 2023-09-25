@@ -150,6 +150,91 @@ namespace Tests
 
         }
 
+        [TestMethod]
+        public void TestPMT()
+        {
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}PMT.bin");
 
+            var packet = MPEGTransportStreamPacket.Parse(packetBytes);
+
+            var PMT = DVBTTable.CreateFromPackets<PMTTable>(packet, 2100);
+
+            Assert.IsNotNull(PMT);
+
+            Assert.AreEqual(2110, PMT.PCRPID);
+            Assert.AreEqual(8, PMT.Streams.Count);
+
+            var streamPIDsDict = new Dictionary<int, ElementaryStreamSpecificData>();
+            foreach (var stream in PMT.Streams)
+            {
+                streamPIDsDict.Add(stream.PID, stream);
+            }
+
+            Assert.AreEqual(36, streamPIDsDict[2110].StreamType);
+            Assert.AreEqual(17, streamPIDsDict[2120].StreamType);
+
+            Assert.AreEqual(17, streamPIDsDict[2121].StreamType);
+            Assert.AreEqual(6, streamPIDsDict[2122].StreamType);
+            Assert.AreEqual(17, streamPIDsDict[2123].StreamType);
+
+            Assert.AreEqual(6, streamPIDsDict[2130].StreamType);
+            Assert.AreEqual(6, streamPIDsDict[2150].StreamType);
+
+            Assert.AreEqual(5, streamPIDsDict[2160].StreamType);
+        }
+
+        [TestMethod]
+        public void TestTDT()
+        {
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}TDT.bin");
+
+            var packet = MPEGTransportStreamPacket.Parse(packetBytes);
+
+            var TDT = DVBTTable.CreateFromPackets<TDTTable>(packet, 20);
+
+            Assert.IsNotNull(TDT);
+
+            Assert.AreEqual(new DateTime(2023, 09, 03, 12, 31, 29), TDT.UTCTime);
+        }
+
+        [TestMethod]
+        public void TestEIT()
+        {
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}EIT.bin");
+
+            var packet = MPEGTransportStreamPacket.Parse(packetBytes);
+
+            var EIT = DVBTTable.CreateFromPackets<EITTable>(packet, 18);
+
+            Assert.IsNotNull(EIT);
+
+            Assert.AreEqual(4, EIT.EventItems.Count);
+
+            var eventsDict = new Dictionary<int, EventItem>();
+            foreach (var ev in EIT.EventItems)
+            {
+                eventsDict.Add(ev.EventId, ev);
+            }
+
+            Assert.AreEqual("Krimi zprávy", eventsDict[175].EventName);
+            Assert.AreEqual("Aktuální události z oblasti kriminality. Zloèiny oèima profesionálù, zkušenıch reportérù i divákù. (Premiéra)", eventsDict[175].Text);
+            Assert.AreEqual(new DateTime(2023, 09, 07, 20, 40, 0), eventsDict[175].StartTime);
+            Assert.AreEqual(new DateTime(2023, 09, 07, 20, 55, 0), eventsDict[175].FinishTime);
+
+            Assert.AreEqual("SHOWTIME", eventsDict[176].EventName);
+            Assert.AreEqual("", eventsDict[176].Text);
+            Assert.AreEqual(new DateTime(2023, 09, 07, 20, 55, 0), eventsDict[176].StartTime);
+            Assert.AreEqual(new DateTime(2023, 09, 07, 21, 15, 0), eventsDict[176].FinishTime);
+
+            Assert.AreEqual("ZOO (130)", eventsDict[177].EventName);
+            Assert.AreEqual("Epizoda: Samá pøekvapení Sid øeší situaci s novou irafou. Viky a Filip èelí dùsledkùm svıch neèekanıch závazkù. Raul potøebuje pomoc s vedením firmy. Kristına vezme Alberta na milost. Charlie se spojuje s Bøéou proti Ovèíkovi. Hrají M. Pecháèková, E. Burešová, T. Klus, B. Suchánková, D. Gránskı, M. Nìmec, B. Èerná, L. Èerná, J. Švandová, V. Kratina a další. Reie L. Kodad. (Premiéra)", eventsDict[177].Text);
+            Assert.AreEqual(new DateTime(2023, 09, 07, 21, 15, 0), eventsDict[177].StartTime);
+            Assert.AreEqual(new DateTime(2023, 09, 07, 22, 35, 0), eventsDict[177].FinishTime);
+
+            Assert.AreEqual("Inkognito", eventsDict[178].EventName);
+            Assert.AreEqual("V zábavné show Inkognito se ètveøice osobností snaí uhodnout profesi jednotlivıch hostù nebo jejich identitu. Hádejte spoleènì s nimi a pobavte se neèekanımi myšlenkami. Moderuje Libor Bouèek. (Premiéra)", eventsDict[178].Text);
+            Assert.AreEqual(new DateTime(2023, 09, 07, 22, 35, 0), eventsDict[178].StartTime);
+            Assert.AreEqual(new DateTime(2023, 09, 07, 23, 45, 0), eventsDict[178].FinishTime);
+        }
     }
 }
