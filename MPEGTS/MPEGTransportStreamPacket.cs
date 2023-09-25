@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -438,7 +439,11 @@ namespace MPEGTS
             {
                 endPos = bytes.Length;
             }
-            var buff = new byte[188];
+            if (bytes.Length == 188 && bytes[pos] == MPEGTSSyncByte)
+            {
+                return 0;
+            }
+
             while (pos + 188 < endPos)
             {
                 if (bytes[pos] != MPEGTSSyncByte)
