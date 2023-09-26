@@ -216,8 +216,8 @@ namespace Tests
                 eventsDict.Add(ev.EventId, ev);
             }
 
-            Assert.AreEqual("Krimi zprávy", eventsDict[175].EventName);
-            Assert.AreEqual("Aktuální události z oblasti kriminality. Zloèiny oèima profesionálù, zkušenıch reportérù i divákù. (Premiéra)", eventsDict[175].Text);
+            Assert.AreEqual("Krimi zprÃ¡vy", eventsDict[175].EventName);
+            Assert.AreEqual("AktuÃ¡lnÃ­ udÃ¡losti z oblasti kriminality. ZloÄiny oÄima profesionÃ¡lÅ¯, zkuÅ¡enÃ½ch reportÃ©rÅ¯ i divÃ¡kÅ¯. (PremiÃ©ra)", eventsDict[175].Text);
             Assert.AreEqual(new DateTime(2023, 09, 07, 20, 40, 0), eventsDict[175].StartTime);
             Assert.AreEqual(new DateTime(2023, 09, 07, 20, 55, 0), eventsDict[175].FinishTime);
 
@@ -227,12 +227,12 @@ namespace Tests
             Assert.AreEqual(new DateTime(2023, 09, 07, 21, 15, 0), eventsDict[176].FinishTime);
 
             Assert.AreEqual("ZOO (130)", eventsDict[177].EventName);
-            Assert.AreEqual("Epizoda: Samá pøekvapení Sid øeší situaci s novou irafou. Viky a Filip èelí dùsledkùm svıch neèekanıch závazkù. Raul potøebuje pomoc s vedením firmy. Kristına vezme Alberta na milost. Charlie se spojuje s Bøéou proti Ovèíkovi. Hrají M. Pecháèková, E. Burešová, T. Klus, B. Suchánková, D. Gránskı, M. Nìmec, B. Èerná, L. Èerná, J. Švandová, V. Kratina a další. Reie L. Kodad. (Premiéra)", eventsDict[177].Text);
+            Assert.AreEqual("Epizoda: SamÃ¡ pÅ™ekvapenÃ­ Sid Å™eÅ¡Ã­ situaci s novou Å¾irafou. Viky a Filip ÄelÃ­ dÅ¯sledkÅ¯m svÃ½ch neÄekanÃ½ch zÃ¡vazkÅ¯. Raul potÅ™ebuje pomoc s vedenÃ­m firmy. KristÃ½na vezme Alberta na milost. Charlie se spojuje s BÅ™Ã©Å¥ou proti OvÄÃ­kovi. HrajÃ­ M. PechÃ¡ÄkovÃ¡, E. BureÅ¡ovÃ¡, T. Klus, B. SuchÃ¡nkovÃ¡, D. GrÃ¡nskÃ½, M. NÄ›mec, B. ÄŒernÃ¡, L. ÄŒernÃ¡, J. Å vandovÃ¡, V. Kratina a dalÅ¡Ã­. ReÅ¾ie L. Kodad. (PremiÃ©ra)", eventsDict[177].Text);
             Assert.AreEqual(new DateTime(2023, 09, 07, 21, 15, 0), eventsDict[177].StartTime);
             Assert.AreEqual(new DateTime(2023, 09, 07, 22, 35, 0), eventsDict[177].FinishTime);
 
             Assert.AreEqual("Inkognito", eventsDict[178].EventName);
-            Assert.AreEqual("V zábavné show Inkognito se ètveøice osobností snaí uhodnout profesi jednotlivıch hostù nebo jejich identitu. Hádejte spoleènì s nimi a pobavte se neèekanımi myšlenkami. Moderuje Libor Bouèek. (Premiéra)", eventsDict[178].Text);
+            Assert.AreEqual("V zÃ¡bavnÃ© show Inkognito se ÄtveÅ™ice osobnostÃ­ snaÅ¾Ã­ uhodnout profesi jednotlivÃ½ch hostÅ¯ nebo jejich identitu. HÃ¡dejte spoleÄnÄ› s nimi a pobavte se neÄekanÃ½mi myÅ¡lenkami. Moderuje Libor BouÄek. (PremiÃ©ra)", eventsDict[178].Text);
             Assert.AreEqual(new DateTime(2023, 09, 07, 22, 35, 0), eventsDict[178].StartTime);
             Assert.AreEqual(new DateTime(2023, 09, 07, 23, 45, 0), eventsDict[178].FinishTime);
         }
