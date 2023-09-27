@@ -3,6 +3,7 @@ using MPEGTS;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace Tests
 {
@@ -235,6 +236,56 @@ namespace Tests
             Assert.AreEqual("V zábavné show Inkognito se čtveřice osobností snaží uhodnout profesi jednotlivých hostů nebo jejich identitu. Hádejte společně s nimi a pobavte se nečekanými myšlenkami. Moderuje Libor Bouček. (Premiéra)", eventsDict[178].Text);
             Assert.AreEqual(new DateTime(2023, 09, 07, 22, 35, 0), eventsDict[178].StartTime);
             Assert.AreEqual(new DateTime(2023, 09, 07, 23, 45, 0), eventsDict[178].FinishTime);
+        }
+
+        [TestMethod]
+        public void TestEITCrete()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}EIT.Crete.bin");
+
+            var packet = MPEGTransportStreamPacket.Parse(packetBytes);
+
+            var EIT = DVBTTable.CreateFromPackets<EITTable>(packet, 18);
+
+            Assert.IsNotNull(EIT);
+
+            Assert.AreEqual(1, EIT.EventItems.Count);
+
+            var ev = EIT.EventItems[0];
+
+            Assert.AreEqual("Κάνε ότι Κοιμάσαι (E)", ev.EventName);
+            Assert.AreEqual("Ψυχαγωγία (Ελληνική σειρά)Ο Χριστόφορος χτυπάει βίαια τον τραπεζικό σύμβουλο  της αδελφής του, κατηγορώντας τον για εμπλοκή στην  υπόθεσή της. Τίνος την εκτέλεση ζητάει ο Βανδώρος;     Παίζουν οι ηθοποιοί: Σπύρος Παπαδόπουλος (Νικόλας Καλίρης), Έμιλυ Κολιανδρή (Βικτόρια Λεσιώτη), Φωτεινή Μπαξεβάνη (Μπετίνα Βορίδη), Μαρίνα Ασλάνογλου (Ευαγγελία Καλίρη), Νικολέτα Κοτσαηλίδου (Άννα Γραμμικού), Δημήτρης Καπετανάκος (Κωνσταντίνος Ίσσαρης), Βασίλης Ευταξόπουλος (Στέλιος Κασδαγλής), Τάσος Γιαννόπουλος (Ηλίας Βανδώρος), Γιάννης Σίντος (Χριστόφορος Στρατάκης), Γεωργία Μεσαρίτη (Νάσια Καλίρη), Αναστασία Στυλιανίδη (Σοφία Μαδούρου), Βασίλης Ντάρμας (Μάκης Βελής), Μαρία Μαυρομμάτη (Ανθή Βελή), Αλέξανδρος Piechowiak (Στάθης Βανδώρος), Χρήστος Διαμαντούδης (Χρήστος Γιδάς), Βίκυ Μαϊδάνογλου (Ζωή Βορίδη), Χρήστος Ζαχαριάδης (Στράτος Φρύσας), Δημήτρης Γεροδήμος (Μιχάλης Κουλεντής), Λευτέρης Πολυχρόνης (Μηνάς Αργύρης), Ζωή Ρηγοπούλου (Λένα Μιχελή), Δημήτρης Καλαντζής (Παύλος, δικηγόρος Βανδώρου), Έλενα Ντέντα (Κατερίνα Σταφυλίδου), Καλλιόπη Πετροπούλου (Στέλλα Κρητικού), Αλέξανδρος Βάρθης (Λευτέρης), Λευτέρης Ζαμπετάκης (Μάνος Αναστασίου), Γιώργος Δεπάστας (Λάκης Βορίδης), Ανανίας Μητσιόπουλος (Γιάννης Φυτράκης), Χρήστος Στεφανής (Θοδωρής Μπίτσιος), Έφη Λιάλιου (Αμάρα), Στέργιος Αντουλάς (Πέτρος).  Guests: Ναταλία Τσαλίκη (ανακρίτρια Βάλβη), Ντόρα Μακρυγιάννη (Πολέμη, δικηγόρος Μηνά), Αλέξανδρος Καλπακίδης (Βαγγέλης Λημνιός, προϊστάμενος της Υπηρεσίας Πληροφοριών), Βασίλης Ρίσβας (Ματθαίος), Θανάσης Δισλής (Γιώργος, καθηγητής), Στέργιος Νένες (Σταμάτης) και Ντάνιελ Νούρκα (Τάκης, μοντέλο).  Σενάριο: Γιάννης Σκαραγκάς  Σκηνοθεσία: Αλέξανδρος Πανταζούδης, Αλέκος Κυράνης                           Διεύθυνση φωτογραφίας: Κλαούντιο Μπολιβάρ, Έλτον Μπίφσα  Σκηνογραφία: Αναστασία Χαρμούση  Κοστούμια: Ελίνα Μαντζάκου  Πρωτότυπη μουσική: Γιάννης Χριστοδουλόπουλος  Μοντάζ : Νίκος Στεφάνου  Οργάνωση Παραγωγής: Ηλίας Βογιατζόγλου, Αλέξανδρος Δρακάτος  Παραγωγή: Silverline Media Productions Α.Ε.", ev.Text);
+            Assert.AreEqual(new DateTime(2023, 07, 27, 22, 00, 0), ev.StartTime);
+            Assert.AreEqual(new DateTime(2023, 07, 27, 23, 00, 0), ev.FinishTime);
+        }
+
+        [TestMethod]
+        public void TestEITCrete2()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}EIT.Crete2.bin");
+
+            var packet = MPEGTransportStreamPacket.Parse(packetBytes);
+
+            var EIT = DVBTTable.CreateFromPackets<EITTable>(packet, 18);
+
+            Assert.IsNotNull(EIT);
+
+            Assert.AreEqual(6, EIT.EventItems.Count);
+
+            var eventsDict = new Dictionary<int, EventItem>();
+            foreach (var ev in EIT.EventItems)
+            {
+                eventsDict.Add(ev.EventId, ev);
+            }
+
+            Assert.AreEqual("Γεύσεις από Ελλάδα (E)", eventsDict[464].EventName);
+            Assert.AreEqual("Ψυχαγωγία (Γαστρονομία) «Αβγοτάραχο»Ενημερωνόμαστε για την ιστορία του ελληνικού  αβγοτάραχου.  Ο σεφ Γιάννης Λιάκου μαγειρεύει μαζί με την  Ολυμπιάδα Μαρία Ολυμπίτη λιγκουίνι με αβγοτάραχο  και ταρτάρ μανιταριών με αβγοτάραχο.   Παρουσίαση: Ολυμπιάδα Μαρία Ολυμπίτη  Eπιμέλεια: Ολυμπιάδα Μαρία Ολυμπίτη  Αρχισυνταξία: Μαρία Πολυχρόνη  Σκηνογραφία: Ιωάννης Αθανασιάδης  Διεύθυνση φωτογραφίας: Ανδρέας Ζαχαράτος  Διεύθυνση παραγωγής: Άσπα Κουνδουροπούλου - Δημήτρης Αποστολίδης  Σκηνοθεσία: Χρήστος Φασόης", eventsDict[464].Text);
+            Assert.AreEqual(new DateTime(2023, 07, 28, 11, 00, 0), eventsDict[464].StartTime);
+            Assert.AreEqual(new DateTime(2023, 07, 28, 11, 50, 0), eventsDict[464].FinishTime);
         }
     }
 }

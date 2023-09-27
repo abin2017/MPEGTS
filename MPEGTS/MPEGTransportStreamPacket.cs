@@ -38,6 +38,7 @@ namespace MPEGTS
         public int PID { get; set; }
         public byte ContinuityCounter { get; set; }
 
+        public List<byte> Header { get; set; } = new List<byte>();
         public List<byte> Payload { get; set; } = new List<byte>();
         public List<byte> AdaptationFiled { get; set; } = new List<byte>();
 
@@ -353,17 +354,20 @@ namespace MPEGTS
                 {
                     case 0:
                         SyncByte = b;
+                        Header.Add(b);
                         break;
                     case 1:
                         TransportErrorIndicator = (b & 128) == 128;
                         PayloadUnitStartIndicator = (b & 64) == 64;
                         TransportPriority = (b & 32) == 32;
                         pidFirstByte = b;
+                        Header.Add(b);
                         break;
                     case 2:
 
                         var pidFirst5Bits = (pidFirstByte & 31) << 8;
                         PID = pidFirst5Bits + b;
+                        Header.Add(b);
 
                         break;
                     case 3:
@@ -375,13 +379,7 @@ namespace MPEGTS
 
                         ContinuityCounter = Convert.ToByte(b & 15);
 
-                        //if (PID == 18)
-                        //{
-                        //    using (var fs = new FileStream(@"c:\temp\EIT.bin", FileMode.Append, FileAccess.Write))
-                        //    {
-                        //        fs.Write(bytes.ToArray(), 0, 188);
-                        //    }
-                        //}
+                        Header.Add(b);
 
                         break;
                     default:
@@ -496,6 +494,35 @@ namespace MPEGTS
         public static List<MPEGTransportStreamPacket> Parse(List<byte> bytes, int PIDFilter = -1)
         {
             return Parse(bytes.ToArray(), 0, bytes.Count, PIDFilter);
+        }
+
+        public static void SavePacketsToFile(List<MPEGTransportStreamPacket> packets, int PID, string fileNamePattern="packet{num}")
+        {
+            var actualPacketNum = 0;
+            var firstPacketWithStartFound = false;
+            foreach (var packet in packets)
+            {
+                if (packet.PID == PID)
+                {
+                    if (!packet.PayloadUnitStartIndicator && !firstPacketWithStartFound)
+                    {
+                        continue;
+                    }
+
+                    if (packet.PayloadUnitStartIndicator)
+                    {
+                        firstPacketWithStartFound = true;
+                        actualPacketNum++;
+                    }
+
+                    using (var fs = new FileStream(string.Format(fileNamePattern,actualPacketNum), FileMode.Append, FileAccess.Write))
+                    {
+                        fs.Write(packet.Header.ToArray(), 0, packet.Header.Count);
+                        fs.Write(packet.AdaptationFiled.ToArray(), 0, packet.AdaptationFiled.Count);
+                        fs.Write(packet.Payload.ToArray(), 0, packet.Payload.Count);
+                    }
+                }
+            }
         }
 
         public static List<MPEGTransportStreamPacket> Parse(byte[] bytes, int startPos, int endPos = -1, int PIDFilter = -1)
