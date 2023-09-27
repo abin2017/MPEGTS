@@ -13,6 +13,13 @@ namespace MPEGTSAnalyzator
     {
         public static void Main(string[] args)
         {
+
+            var packetBytes = File.ReadAllBytes($"/mnt/data/develop/git/MPEGTS/MPEGTSTests/TestData/EIT.IT.bin");
+            var packets = MPEGTransportStreamPacket.Parse(packetBytes);
+            var EIT = DVBTTable.CreateFromPackets<EITTable>(packets, 18);
+
+
+
             if (args != null &&
                 args.Length >= 0 &&
                 FileNameParamValue(args) != null)
@@ -237,7 +244,7 @@ namespace MPEGTSAnalyzator
                     var packetsEITwithSDT = new List<MPEGTransportStreamPacket>();
                     packetsEITwithSDT.AddRange(packetsByPID[18]);
 
-                    //MPEGTransportStreamPacket.SavePacketsToFile(packetsByPID[18], 18, @"c:\temp\EIT{0}.bin");
+                    //MPEGTransportStreamPacket.SavePacketsToFile(packetsByPID[18], 18, @"/temp/EIT{0}.IT.bin");
 
                     if (packetsByPID.ContainsKey(0))
                     {
