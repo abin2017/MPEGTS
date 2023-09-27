@@ -42,7 +42,7 @@ namespace MPEGTS
         public List<byte> Payload { get; set; } = new List<byte>();
         public List<byte> AdaptationFiled { get; set; } = new List<byte>();
 
-        public static void WriteByteArrayToConsole(byte[] bytes)
+        public static void WriteByteArrayToConsole(byte[] bytes, bool includeHexa = false)
         {
             var sb = new StringBuilder();
             var sbc = new StringBuilder();
@@ -71,7 +71,10 @@ namespace MPEGTS
                 if (c >= 10)
                 {
                     Console.WriteLine(sbb.ToString()+"  "+((row+1)*10).ToString().PadLeft(3));
-                    Console.WriteLine(sbh.ToString());
+                    if (includeHexa)
+                    {
+                        Console.WriteLine(sbh.ToString());
+                    }
                     Console.WriteLine(sb.ToString());
                     Console.WriteLine(sbc.ToString());
                     Console.WriteLine();
@@ -85,7 +88,10 @@ namespace MPEGTS
                 }
             }
             Console.WriteLine(sbb.ToString());
-            Console.WriteLine(sbh.ToString());
+            if (includeHexa)
+            {
+                Console.WriteLine(sbh.ToString());
+            }
             Console.WriteLine(sb.ToString());
             Console.WriteLine(sbc.ToString());
             Console.WriteLine();
@@ -384,13 +390,10 @@ namespace MPEGTS
                         break;
                     default:
 
+                        Payload.Add(b);
+
                         switch (AdaptationFieldControl)
                         {
-
-                            case AdaptationFieldControlEnum.NoAdaptationFieldPayloadOnly:
-                                Payload.Add(b);
-                                break;
-
                             case AdaptationFieldControlEnum.AdaptationFieldFollowedByPayload:
                             case AdaptationFieldControlEnum.AdaptationFieldOnlyNoPayload:
 
@@ -415,13 +418,7 @@ namespace MPEGTS
                                     PCR.Add(b);
                                 }
 
-                                if (AdaptationFieldControl != AdaptationFieldControlEnum.AdaptationFieldOnlyNoPayload && bytePos > 4 + AdaptationFieldLength)
-                                {
-                                    Payload.Add(b);
-                                } else
-                                {
-                                    AdaptationFiled.Add(b);
-                                }
+                                AdaptationFiled.Add(b);
 
                                 break;
                         }
@@ -518,7 +515,6 @@ namespace MPEGTS
                     using (var fs = new FileStream(string.Format(fileNamePattern,actualPacketNum), FileMode.Append, FileAccess.Write))
                     {
                         fs.Write(packet.Header.ToArray(), 0, packet.Header.Count);
-                        fs.Write(packet.AdaptationFiled.ToArray(), 0, packet.AdaptationFiled.Count);
                         fs.Write(packet.Payload.ToArray(), 0, packet.Payload.Count);
                     }
                 }

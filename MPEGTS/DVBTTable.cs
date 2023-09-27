@@ -39,7 +39,11 @@ namespace MPEGTS
                     if (t.CRCIsValid())
                     {
                         return t;
+                    } else
+                    {
+                        Console.WriteLine("CRC not valid");
                     }
+
 
                 } catch (Exception ex)
                 {

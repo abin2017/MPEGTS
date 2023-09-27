@@ -30,13 +30,13 @@ namespace MPEGTS
             var pos = 1;
             if (pointerFiled != 0)
             {
-                pos = pos + pointerFiled + 1;
+                pos = pos + pointerFiled;
             }
 
             if (bytes.Count < pos + 2)
                 return;
 
-            ID = bytes[pos];
+            ID = bytes[pos]; // 4E
 
             SectionSyntaxIndicator = ((bytes[pos + 1] & 128) == 128);
             Private = ((bytes[pos + 1] & 64) == 64);
@@ -53,7 +53,7 @@ namespace MPEGTS
 
             if (bytes.Count < SectionLength + 4)
             {
-                throw new IndexOutOfRangeException();
+                SectionLength = bytes.Count - 4;
             }
 
             bytes.CopyTo(0, Data, 0, SectionLength);
@@ -106,6 +106,11 @@ namespace MPEGTS
                 var allDescriptorsLength = ((bytes[pos + 0] & 15) << 8) + bytes[pos + 1];
 
                 pos = pos + 2;
+
+                if (allDescriptorsLength+pos>bytes.Count)
+                {
+                    allDescriptorsLength = bytes.Count - pos;
+                }
 
                 var allDescriptorsData = new byte[allDescriptorsLength];
                 bytes.CopyTo(pos, allDescriptorsData, 0, allDescriptorsLength);

@@ -13,12 +13,9 @@ namespace MPEGTSAnalyzator
     {
         public static void Main(string[] args)
         {
-
-            var packetBytes = File.ReadAllBytes($"/mnt/data/develop/git/MPEGTS/MPEGTSTests/TestData/EIT.IT.bin");
-            var packets = MPEGTransportStreamPacket.Parse(packetBytes);
-            var EIT = DVBTTable.CreateFromPackets<EITTable>(packets, 18);
-
-
+            //var packetBytes = File.ReadAllBytes($@"C:\Users\Jean Luc Picard\source\repos\MPEGTS\MPEGTSTests\TestData\EIT.IT.bin");
+            //var packets = MPEGTransportStreamPacket.Parse(packetBytes);
+            //var EIT = DVBTTable.CreateFromPackets<EITTable>(packets, 18);
 
             if (args != null &&
                 args.Length >= 0 &&
@@ -239,6 +236,18 @@ namespace MPEGTSAnalyzator
                     Console.WriteLine($"Event Information Table (EIT):");
                     Console.WriteLine($"------------------------------");
 
+                    var eitTables = DVBTTable.CreateAllFromPackets<EITTable>(packetsByPID[18], 18);
+
+                    foreach (var eit in eitTables)
+                    {
+                        foreach (var ev in eit.EventItems)
+                        {
+                            Console.WriteLine(ev.WriteToString());
+                        }
+                    }
+
+
+                    /*
                     var eitService = new EITService(logger);
 
                     var packetsEITwithSDT = new List<MPEGTransportStreamPacket>();
@@ -250,6 +259,7 @@ namespace MPEGTSAnalyzator
                     {
                         packetsEITwithSDT.AddRange(packetsByPID[0]);
                     }
+
 
                     var eitScanRes = eitService.Scan(packetsEITwithSDT);
 
@@ -286,6 +296,7 @@ namespace MPEGTSAnalyzator
                             }
                         }
                     }
+                    */
                 }
             }
         }
