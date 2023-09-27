@@ -237,7 +237,7 @@ namespace MPEGTSAnalyzator
                     var packetsEITwithSDT = new List<MPEGTransportStreamPacket>();
                     packetsEITwithSDT.AddRange(packetsByPID[18]);
 
-                    MPEGTransportStreamPacket.SavePacketsToFile(packetsByPID[18], 18, @"c:\temp\EIT{0}.bin");
+                    //MPEGTransportStreamPacket.SavePacketsToFile(packetsByPID[18], 18, @"c:\temp\EIT{0}.bin");
 
                     if (packetsByPID.ContainsKey(0))
                     {
