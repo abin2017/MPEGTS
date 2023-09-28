@@ -15,11 +15,12 @@ namespace MPEGTS
             if (bytes == null || bytes.Count < 5)
                 return;
 
-            var pointerFiled = bytes[0];
+            var pointerField = bytes[0];
             var pos = 1;
-            if (pointerFiled != 0)
+
+            if (pointerField != 0)
             {
-                pos = pos + pointerFiled + 1;
+                pos = pos + pointerField;
             }
 
             if (bytes.Count < pos + 2)

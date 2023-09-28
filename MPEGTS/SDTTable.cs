@@ -91,11 +91,12 @@ namespace MPEGTS
             if (bytes == null || bytes.Count < 5)
                 return;
 
-            var pointerFiled = bytes[0];
+            var pointerField = bytes[0];
             var pos = 1;
-            if (pointerFiled != 0)
+
+            if (pointerField != 0)
             {
-                pos = pos + pointerFiled + 1;
+                pos = pos + pointerField;
             }
 
             if (bytes.Count < pos + 2)
@@ -119,8 +120,9 @@ namespace MPEGTS
             Data = new byte[SectionLength];
             CRC = new byte[4];
 
-            bytes.CopyTo(0, Data, 0, SectionLength);
-            bytes.CopyTo(SectionLength, CRC, 0, 4);
+            Data[0] = 0;
+            bytes.CopyTo(pointerField + 1, Data, 1, SectionLength - 1);
+            bytes.CopyTo(pointerField + SectionLength, CRC, 0, 4);
 
             pos = pos + 3;
 
