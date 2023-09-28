@@ -239,6 +239,11 @@ namespace MPEGTSAnalyzator
 
                     foreach (var kvp in eitPackets)
                     {
+                        if (kvp.Key == 87)
+                        {
+                            MPEGTransportStreamPacket.SavePacketsToFile(kvp.Value, @"c:\temp\EIT.UA.bin");
+                        }
+
                         var eitTable = DVBTTable.CreateFromPackets<EITTable>(kvp.Value, 18);
 
                         if (eitTable != null)

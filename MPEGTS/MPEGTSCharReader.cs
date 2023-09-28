@@ -8,6 +8,8 @@ namespace MPEGTS
     {
         /// <summary>
         ///  https://en.wikipedia.org/wiki/T.51/ISO/IEC_6937
+        ///  https://www.etsi.org/deliver/etsi_en/300400_300499/300468/01.03.01_60/en_300468v010301p.pdf
+        ///  https://dvb.org/wp-content/uploads/2019/08/A038r14_Specification-for-Service-Information-SI-in-DVB-Systems_Draft_EN_300-468-v1-17-1_Dec-2021.pdf
         /// </summary>
         /// <value>The</value>
         public static Dictionary<byte, Tuple<string, string>> ISO6937Table { get; set; } =
@@ -113,9 +115,15 @@ namespace MPEGTS
                         // ISO 8859-9 Latin/Arabic alphabet - see table A.6
                         txt = System.Text.Encoding.GetEncoding("iso-8859-9").GetString(bytes, index, count);
                         break;
+                    //case 10:
+                    //  - not supported
+                    //    // ISO 8859-14 Latin alphabet No. 8 (Celtic) Figure A.10
+                    //    txt = System.Text.Encoding.GetEncoding("iso-8859-14").GetString(bytes, index, count);
+                    //    break;
                     default:
                         if (throwErrorWhenUnsupportedEncodingFound)
                         {
+                            MPEGTransportStreamPacket.WriteByteArrayToConsole(bytes);
                             throw new MPEGTSUnsupportedEncodingException();
                         }
                         break;
@@ -124,6 +132,10 @@ namespace MPEGTS
                 if (bytes[index] == 0x14)
                 {
                     // Big5 subset of ISO/IEC 10646 [16] Traditional Chinese
+                    if (throwErrorWhenUnsupportedEncodingFound)
+                    {
+                        throw new MPEGTSUnsupportedEncodingException();
+                    }
                 }
 
                 if (txt != null)

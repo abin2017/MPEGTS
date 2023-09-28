@@ -386,5 +386,20 @@ namespace Tests
             Assert.AreEqual(new DateTime(2023, 08, 16, 19, 54, 01), eventsDict[31939].StartTime);
             Assert.AreEqual(new DateTime(2023, 08, 16, 20, 00, 51), eventsDict[31939].FinishTime);
         }
+
+        [TestMethod]
+        public void TestEITUA()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}EIT.UA.bin");
+
+            var packets = MPEGTransportStreamPacket.Parse(packetBytes);
+
+            var EIT = DVBTTable.CreateFromPackets<EITTable>(packets, 18);
+
+            Assert.IsNotNull(EIT);
+            Assert.IsTrue(EIT.CRCIsValid());
+        }
     }
 }
