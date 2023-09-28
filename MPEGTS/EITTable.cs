@@ -26,17 +26,18 @@ namespace MPEGTS
             if (bytes == null || bytes.Count < 5)
                 return;
 
-            var pointerFiled = bytes[0];
+            var pointerField = bytes[0];
             var pos = 1;
-            if (pointerFiled != 0)
+
+            if (pointerField != 0)
             {
-                pos = pos + pointerFiled;
+                pos = pos + pointerField;
             }
 
             if (bytes.Count < pos + 2)
                 return;
 
-            ID = bytes[pos]; // 4E
+            ID = bytes[pos]; // 4E ~ 78
 
             SectionSyntaxIndicator = ((bytes[pos + 1] & 128) == 128);
             Private = ((bytes[pos + 1] & 64) == 64);
@@ -46,18 +47,9 @@ namespace MPEGTS
             Data = new byte[SectionLength];
             CRC = new byte[4];
 
-            //if (!DVBTTable.CRCIsValid(1,1))
-            //{
-            //    return null;
-            //}
-
-            if (bytes.Count < SectionLength + 4)
-            {
-                SectionLength = bytes.Count - 4;
-            }
-
-            bytes.CopyTo(0, Data, 0, SectionLength);
-            bytes.CopyTo(SectionLength, CRC, 0, 4);
+            Data[0] = 0;
+            bytes.CopyTo(pointerField+1, Data, 1, SectionLength-1);
+            bytes.CopyTo(pointerField + SectionLength, CRC, 0, 4);
 
             pos = pos + 3;
 

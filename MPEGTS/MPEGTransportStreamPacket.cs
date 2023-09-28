@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 
 namespace MPEGTS
@@ -42,7 +43,12 @@ namespace MPEGTS
         public List<byte> Payload { get; set; } = new List<byte>();
         public List<byte> AdaptationFiled { get; set; } = new List<byte>();
 
-        public static void WriteByteArrayToConsole(byte[] bytes, bool includeHexa = false)
+        public static void WriteByteArrayAsListToConsole(byte[] bytes)
+        {
+            Console.WriteLine(string.Join(",", bytes));
+        }
+
+        public static void WriteByteArrayToConsole(byte[] bytes, bool includeHexa = true)
         {
             var sb = new StringBuilder();
             var sbc = new StringBuilder();
@@ -54,7 +60,7 @@ namespace MPEGTS
             for (var i = 0; i < bytes.Length; i++)
             {
                 sbb.Append($"{Convert.ToString(bytes[i], 2).PadLeft(8, '0'),9} ");
-                sbh.Append($"{("0x"+Convert.ToString(bytes[i], 16)).PadLeft(8, ' ').ToUpper(),9} ");
+                sbh.Append($"{("0x"+Convert.ToString(bytes[i], 16)).ToUpper().PadLeft(8, ' '),9} ");
                 sb.Append($"{bytes[i].ToString(),9} ");
 
 
@@ -134,6 +140,19 @@ namespace MPEGTS
             ulong pcrValue = (pcrBase * 300) + pcrExtension;
 
             return pcrValue;
+        }
+
+        public static string WritePacketListToString(List<MPEGTransportStreamPacket> packets)
+        {
+            var res = new StringBuilder();
+
+            res.AppendLine($"{"PID",10}{"AdF.Ctrl",10}{"AdF.Len",10}{"Con.Cn.",10}{"Start",10}");
+            foreach (var packet in packets)
+            {
+                res.AppendLine($"{packet.PID,10}{(int)packet.AdaptationFieldControl,10}{(int)packet.AdaptationFieldLength,10}{(int)packet.ContinuityCounter,10}{Convert.ToInt32(packet.PayloadUnitStartIndicator),10}");
+            }
+
+            return res.ToString();
         }
 
         public static string WriteBytesToString(List<byte> bytes)
@@ -230,40 +249,84 @@ namespace MPEGTS
             return res;
         }
 
-        public static Dictionary<int, List<byte>> GetAllPacketsPayloadBytesByPID(IEnumerable<MPEGTransportStreamPacket> packets, long PID)
+        public static Dictionary<int, List<MPEGTransportStreamPacket>> GetFilteredPackets(List<MPEGTransportStreamPacket> packets, int PID)
         {
-            var res = new Dictionary<int, List<byte>>();
-            var firstPacketFound = false;
-            var currentKey = 0;
+            var res = new Dictionary<int, List<MPEGTransportStreamPacket>>();
+            var currentKey = -1;
 
             foreach (var packet in packets)
             {
                 if (packet.PID == PID)
                 {
-                    if (!firstPacketFound)
+                    if (packet.PayloadUnitStartIndicator)
                     {
-                        if (packet.PayloadUnitStartIndicator)
+                        // there can be bytes in next packet!
+                        if (res.ContainsKey(currentKey))
                         {
-                            firstPacketFound = true;
-
-                            res.Add(currentKey, new List<byte>());
-
-                            res[currentKey].AddRange(packet.Payload);
+                            res[currentKey].Add(packet);
                         }
-                        else
+
+                        currentKey++;
+
+                        if (!res.ContainsKey(currentKey))
                         {
-                            continue;
+                            res.Add(currentKey, new List<MPEGTransportStreamPacket>());
                         }
+                        res[currentKey].Add(packet);
                     }
                     else
                     {
-                        if (packet.PayloadUnitStartIndicator)
+                        if (res.ContainsKey(currentKey))
                         {
-                            currentKey++;
-                            res.Add(currentKey, new List<byte>());
+                            res[currentKey].Add(packet);
+                        }
+                    }
+                }
+            }
+
+            return res;
+        }
+
+        public static Dictionary<int, List<byte>> GetAllPacketsPayloadBytesByPID(IEnumerable<MPEGTransportStreamPacket> packets, long PID)
+        {
+            var res = new Dictionary<int, List<byte>>();
+            var currentKey = -1;
+
+            foreach (var packet in packets)
+            {
+                if (packet.PID == PID)
+                {
+                    if (packet.PayloadUnitStartIndicator)
+                    {
+                        // there can be bytes in next packet!
+                        if (res.ContainsKey(currentKey))
+                        {
+                            if (packet.Payload != null &&
+                                packet.Payload.Count > 0 &&
+                                packet.Payload[0] != 0)
+                            {
+                                // not zero pointer field in next packet -> adding bytes to payload (except pointer field byte)
+                                var bytesFromNextPacketCount = packet.Payload[0];
+                                var buff = new byte[bytesFromNextPacketCount];
+                                packet.Payload.CopyTo(1, buff, 0, bytesFromNextPacketCount);
+                                res[currentKey].AddRange(buff);
+                            }
                         }
 
+                        currentKey++;
+
+                        if (!res.ContainsKey(currentKey))
+                        {
+                            res.Add(currentKey, new List<byte>());
+                        }
                         res[currentKey].AddRange(packet.Payload);
+                    }
+                    else
+                    {
+                        if (res.ContainsKey(currentKey))
+                        {
+                            res[currentKey].AddRange(packet.Payload);
+                        }
                     }
                 }
             }
@@ -493,30 +556,14 @@ namespace MPEGTS
             return Parse(bytes.ToArray(), 0, bytes.Count, PIDFilter);
         }
 
-        public static void SavePacketsToFile(List<MPEGTransportStreamPacket> packets, int PID, string fileNamePattern="packet{num}")
+        public static void SavePacketsToFile(List<MPEGTransportStreamPacket> packets, string fileName)
         {
-            var actualPacketNum = 0;
-            var firstPacketWithStartFound = false;
             foreach (var packet in packets)
             {
-                if (packet.PID == PID)
+                using (var fs = new FileStream(fileName, FileMode.Append, FileAccess.Write))
                 {
-                    if (!packet.PayloadUnitStartIndicator && !firstPacketWithStartFound)
-                    {
-                        continue;
-                    }
-
-                    if (packet.PayloadUnitStartIndicator)
-                    {
-                        firstPacketWithStartFound = true;
-                        actualPacketNum++;
-                    }
-
-                    using (var fs = new FileStream(string.Format(fileNamePattern,actualPacketNum), FileMode.Append, FileAccess.Write))
-                    {
-                        fs.Write(packet.Header.ToArray(), 0, packet.Header.Count);
-                        fs.Write(packet.Payload.ToArray(), 0, packet.Payload.Count);
-                    }
+                    fs.Write(packet.Header.ToArray(), 0, packet.Header.Count);
+                    fs.Write(packet.Payload.ToArray(), 0, packet.Payload.Count);
                 }
             }
         }

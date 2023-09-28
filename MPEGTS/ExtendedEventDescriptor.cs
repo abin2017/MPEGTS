@@ -17,8 +17,8 @@ namespace MPEGTS
         {
             var res = new ExtendedEventDescriptor();
 
-            res.Tag = bytes[startPos+0];
-            res.Length = bytes[startPos+1];
+            res.Tag = bytes[startPos + 0];
+            res.Length = bytes[startPos + 1];
 
             var numberAndLength = bytes[startPos + 2];
 
@@ -38,9 +38,12 @@ namespace MPEGTS
 
             var pos = startPos + 6 + itemsLength + 1;
 
-            var textLength = bytes[pos];
+            if (pos <= bytes.Length - 1)
+            {
+                var textLength = bytes[pos];
 
-            res.Text = MPEGTSCharReader.ReadString(bytes, pos+1, textLength, true);
+                res.Text = MPEGTSCharReader.ReadString(bytes, pos + 1, textLength, true);
+            }
 
             return res;
         }

@@ -229,74 +229,27 @@ namespace MPEGTSAnalyzator
 
             if (includeEIT)
             {
-
                 if (packetsByPID.ContainsKey(18))
                 {
                     Console.WriteLine();
                     Console.WriteLine($"Event Information Table (EIT):");
                     Console.WriteLine($"------------------------------");
 
-                    var eitTables = DVBTTable.CreateAllFromPackets<EITTable>(packetsByPID[18], 18);
+                    var eitPackets = MPEGTransportStreamPacket.GetFilteredPackets(packetsByPID[18], 18);
 
-                    foreach (var eit in eitTables)
+                    foreach (var kvp in eitPackets)
                     {
-                        foreach (var ev in eit.EventItems)
+                        var eitTable = DVBTTable.CreateFromPackets<EITTable>(kvp.Value, 18);
+
+                        if (eitTable != null)
                         {
-                            Console.WriteLine(ev.WriteToString());
-                        }
-                    }
 
-
-                    /*
-                    var eitService = new EITService(logger);
-
-                    var packetsEITwithSDT = new List<MPEGTransportStreamPacket>();
-                    packetsEITwithSDT.AddRange(packetsByPID[18]);
-
-                    //MPEGTransportStreamPacket.SavePacketsToFile(packetsByPID[18], 18, @"/temp/EIT{0}.IT.bin");
-
-                    if (packetsByPID.ContainsKey(0))
-                    {
-                        packetsEITwithSDT.AddRange(packetsByPID[0]);
-                    }
-
-
-                    var eitScanRes = eitService.Scan(packetsEITwithSDT);
-
-                    if (eitScanRes.UnsupportedEncoding)
-                    {
-                        Console.WriteLine();
-                        Console.WriteLine("Unsupported encoding");
-                        Console.WriteLine();
-                    }
-                    else
-                    {
-
-                        Console.WriteLine();
-                        Console.WriteLine("Current events");
-                        Console.WriteLine();
-
-                        Console.WriteLine($"{"Program number",14} {"Date".PadRight(10, ' '),10} {"From "}-{" To  "} Text");
-                        Console.WriteLine($"{"--------------",14} {"----".PadRight(10, '-'),10} {"-----"}-{"-----"} -------------------------------");
-
-                        foreach (var kvp in eitScanRes.CurrentEvents)
-                        {
-                            Console.WriteLine(kvp.Value.WriteToString());
-                        }
-
-                        Console.WriteLine();
-                        Console.WriteLine("Scheduled events");
-                        Console.WriteLine();
-
-                        foreach (var programNumber in eitScanRes.ScheduledEvents.Keys)
-                        {
-                            foreach (var ev in eitScanRes.ScheduledEvents[programNumber])
+                            foreach (var ev in eitTable.EventItems)
                             {
                                 Console.WriteLine(ev.WriteToString());
                             }
                         }
                     }
-                    */
                 }
             }
         }

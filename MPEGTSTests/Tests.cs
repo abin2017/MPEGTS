@@ -19,6 +19,7 @@ namespace Tests
             var PSITable = DVBTTable.CreateFromPackets<PSITable>(packet, 0);
 
             Assert.IsNotNull(PSITable);
+            Assert.IsTrue(PSITable.CRCIsValid());
 
             Assert.AreEqual(PSITable.ProgramAssociations.Count, 20);
 
@@ -58,6 +59,7 @@ namespace Tests
             var NITTable = DVBTTable.CreateFromPackets<NITTable>(packet, 16);
 
             Assert.IsNotNull(NITTable);
+            Assert.IsTrue(NITTable.CRCIsValid());
 
             Assert.AreEqual("CT, MUX 21", NITTable.NetworkName);
             Assert.AreEqual(18, NITTable.ServiceList.Services.Count);
@@ -94,6 +96,7 @@ namespace Tests
             var SDT = DVBTTable.CreateFromPackets<SDTTable>(packet, 17);
 
             Assert.IsNotNull(SDT);
+            Assert.IsTrue(SDT.CRCIsValid());
 
             Assert.AreEqual(SDT.ServiceDescriptors.Count, 19);
 
@@ -161,6 +164,7 @@ namespace Tests
             var PMT = DVBTTable.CreateFromPackets<PMTTable>(packet, 2100);
 
             Assert.IsNotNull(PMT);
+            Assert.IsTrue(PMT.CRCIsValid());
 
             Assert.AreEqual(2110, PMT.PCRPID);
             Assert.AreEqual(8, PMT.Streams.Count);
@@ -194,6 +198,7 @@ namespace Tests
             var TDT = DVBTTable.CreateFromPackets<TDTTable>(packet, 20);
 
             Assert.IsNotNull(TDT);
+            Assert.IsTrue(TDT.CRCIsValid());
 
             Assert.AreEqual(new DateTime(2023, 09, 03, 12, 31, 29), TDT.UTCTime);
         }
@@ -208,6 +213,7 @@ namespace Tests
             var EIT = DVBTTable.CreateFromPackets<EITTable>(packet, 18);
 
             Assert.IsNotNull(EIT);
+            Assert.IsTrue(EIT.CRCIsValid());
 
             Assert.AreEqual(4, EIT.EventItems.Count);
 
@@ -273,6 +279,7 @@ namespace Tests
             var EIT = DVBTTable.CreateFromPackets<EITTable>(packet, 18);
 
             Assert.IsNotNull(EIT);
+            Assert.IsTrue(EIT.CRCIsValid());
 
             Assert.AreEqual(6, EIT.EventItems.Count);
 
@@ -286,6 +293,98 @@ namespace Tests
             Assert.AreEqual("Ψυχαγωγία (Γαστρονομία) «Αβγοτάραχο»Ενημερωνόμαστε για την ιστορία του ελληνικού  αβγοτάραχου.  Ο σεφ Γιάννης Λιάκου μαγειρεύει μαζί με την  Ολυμπιάδα Μαρία Ολυμπίτη λιγκουίνι με αβγοτάραχο  και ταρτάρ μανιταριών με αβγοτάραχο.   Παρουσίαση: Ολυμπιάδα Μαρία Ολυμπίτη  Eπιμέλεια: Ολυμπιάδα Μαρία Ολυμπίτη  Αρχισυνταξία: Μαρία Πολυχρόνη  Σκηνογραφία: Ιωάννης Αθανασιάδης  Διεύθυνση φωτογραφίας: Ανδρέας Ζαχαράτος  Διεύθυνση παραγωγής: Άσπα Κουνδουροπούλου - Δημήτρης Αποστολίδης  Σκηνοθεσία: Χρήστος Φασόης", eventsDict[464].Text);
             Assert.AreEqual(new DateTime(2023, 07, 28, 11, 00, 0), eventsDict[464].StartTime);
             Assert.AreEqual(new DateTime(2023, 07, 28, 11, 50, 0), eventsDict[464].FinishTime);
+
+            Assert.AreEqual("Ένα Μήλο την Ημέρα (E)", eventsDict[465].EventName);
+            Assert.AreEqual("Ντοκιμαντέρ (Διατροφή)Έτος παραγωγής: 2014 Τρεις συγκάτοικοι με εντελώς διαφορετικές απόψεις περί διατροφής - ο Θοδωρής Αντωνιάδης, η Αγγελίνα Παρασκευαΐδη και η Ιωάννα Πιατά- και ο Μιχάλης Μητρούσης στο ρόλο του από μηχανής... διατροφολόγου, μας μιλούν για τη διατροφή μας Σενάριο: Κωστής Ζαφειράκης Έρευνα- δημοσιογραφική επιμέλεια: Στέλλα Παναγιωτοπούλου Διεύθυνση φωτογραφίας: Νίκος Κανέλλος Μουσική τίτλων: Κώστας Γανωτής Ερμηνεύει η Ελένη Τζαβάρα Μοντάζ: Λάμπης Χαραλαμπίδης Ηχοληψία: Ορέστης Καμπερίδης Σκηνικά: Θοδωρής Λουκέρης Ενδυματόλογος: Στέφανι Λανιέρ Μακιγιάζ-κομμώσεις: Έλια Κανάκη Οργάνωση παραγωγής: Βάσω Πατρούμπα Διεύθυνση παραγωγής: Αναστασία Καραδήμου Εκτέλεση παραγωγής: ΜΙΤΟΣ Σκηνοθεσία: Νίκος Κρητικός", eventsDict[465].Text);
+            Assert.AreEqual(new DateTime(2023, 07, 28, 11, 50, 0), eventsDict[465].StartTime);
+            Assert.AreEqual(new DateTime(2023, 07, 28, 12, 00, 0), eventsDict[465].FinishTime);
+
+            Assert.AreEqual("Η Καλύτερη Τούρτα Κερδίζει (E)", eventsDict[466].EventName);
+            Assert.AreEqual("Παιδικά-Νεανικά «Ο υδάτινος κόσμος της Κλόι»[Best Cake Wins]  Έτος παραγωγής: 2019  Κάθε παιδί αξίζει την τέλεια τούρτα. Και σε αυτή την εκπομπή μπορεί να την έχει.  Αρκεί να ξεδιπλώσει τη φαντασία του χωρίς όρια, να αποτυπώσει την τούρτα στο  χαρτί και να να δώσει το σχέδιό του σε δύο κορυφαίους ζαχαροπλάστες.", eventsDict[466].Text);
+            Assert.AreEqual(new DateTime(2023, 07, 28, 12, 00, 0), eventsDict[466].StartTime);
+            Assert.AreEqual(new DateTime(2023, 07, 28, 12, 30, 0), eventsDict[466].FinishTime);
+
+            Assert.AreEqual("KooKooLand (E)", eventsDict[467].EventName);
+            Assert.AreEqual("Παιδικά-Νεανικά «Άκου τον ωκεανό»Έτος παραγωγής: 2022 Στην Kookooland δεν υπάρχει Ωκεανός! Ούτε ένας! Το Ρομπότ και τι δεν θα έδινε να δει από κοντά τον απέραντο μπλε ωκεανό! Ακούγονται οι φωνές των: Αντώνης Κρόμπας - Λάμπρος ο Δεινόσαυρος + voice director Λευτέρης Ελευθερίου - Koobot το Ρομπότ Κατερίνα Τσεβά - Χρύσα η Μύγα Μαρία Σαμάρκου - Γάτα η Σουριγάτα Τατιάννα Καλατζή - Βάγια η Κουκουβάγια Σκηνοθεσία: Ivan Salfa Υπεύθυνη μυθοπλασίας - σενάριο: Θεοδώρα Κατσιφή Σεναριακή Ομάδα: Λίλια Γκούνη-Σοφικίτη, Όλγα Μανάρα Επιστημονική Συνεργάτης, Αναπτυξιακή Ψυχολόγος: Σουζάνα Παπαφάγου Μουσική και ενορχήστρωση: Σταμάτης Σταματάκης Στίχοι: Άρης Δαβαράκης Χορογράφος: Ευδοκία Βεροπούλου Χορευτές: Δανάη Γρίβα Άννα Δασκάλου Ράνια Κολιού Χριστίνα Μάρκου Κατερίνα Μήτσιου Νατάσσα Νίκου Δημήτρης Παπακυριαζής Σπύρος Παυλίδης Ανδρόνικος Πολυδώρου Βασιλική Ρήγα Ενδυματολόγος: Άννα Νομικού Κατασκευή 3D Unreal engine: WASP STUDIO Creative Director: Γιώργος Ζάμπας, ROOFTOP IKE Τίτλοι - Γραφικά: Δημήτρης Μπέλλος, Νίκος Ούτσικας Τίτλοι-Art Direction Supervisor: Άγγελος Ρούβας Line Producer: Ευάγγελος Κυριακίδης Βοηθός Οργάνωσης Παραγωγής: Νίκος Θεοτοκάς Εταιρεία Παραγωγής: Feelgood Productions Executive Producers: Φρόσω Ράλλη - Γιάννης Εξηντάρης Παραγωγός: Ειρήνη Σουγανίδου", eventsDict[467].Text);
+            Assert.AreEqual(new DateTime(2023, 07, 28, 12, 30, 0), eventsDict[467].StartTime);
+            Assert.AreEqual(new DateTime(2023, 07, 28, 13, 00, 0), eventsDict[467].FinishTime);
+
+            Assert.AreEqual("Γεια σου, Ντάγκι - Γ Κύκλος (E)", eventsDict[468].EventName);
+            Assert.AreEqual("Παιδικά-Νεανικά (Κινούμενα σχέδια) Επεισόδια 17ο: «Το σήμα της μοιρασιάς» & 18ο: «Το σήμα της Ιστορίας» & 19ο: «Το σήμα της Τέχνης» & 20ο: Το σήμα..[Hey, Duggee]  Έτος παραγωγής: 2016", eventsDict[468].Text);
+            Assert.AreEqual(new DateTime(2023, 07, 28, 13, 00, 0), eventsDict[468].StartTime);
+            Assert.AreEqual(new DateTime(2023, 07, 28, 13, 30, 0), eventsDict[468].FinishTime);
+
+            Assert.AreEqual("Με Οικολογική Ματιά (E)", eventsDict[469].EventName);
+            Assert.AreEqual("Ντοκιμαντέρ (Οικολογία) «Τα παιδιά της επανάστασης»[Eco-Eye: Sustainable Solutions]  Έτος παραγωγής: 2016  Η νέα παρουσιάστρια της σειράς Κλερ Καμπαμέτου  ερευνά τα αίτια πίσω από τις απεργίες για την  κλιματική αλλαγή που πραγματοποιεί η νέα γενιά, η  οποία φέρει τη μικρότερη ευθύνη. Συναντά σχολικούς  απεργούς για να μάθει πώς νιώθουν.", eventsDict[469].Text);
+            Assert.AreEqual(new DateTime(2023, 07, 28, 13, 30, 0), eventsDict[469].StartTime);
+            Assert.AreEqual(new DateTime(2023, 07, 28, 14, 00, 0), eventsDict[469].FinishTime);
+        }
+
+        [TestMethod]
+        public void TestEITIt()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}EIT.IT.bin");
+
+            var packets = MPEGTransportStreamPacket.Parse(packetBytes);
+
+            var EIT = DVBTTable.CreateFromPackets<EITTable>(packets, 18);
+
+            Assert.IsNotNull(EIT);
+            Assert.IsTrue(EIT.CRCIsValid());
+
+            Assert.AreEqual(1, EIT.EventItems.Count);
+
+            var ev = EIT.EventItems[0];
+
+            Assert.AreEqual("Distretto di polizia", ev.EventName);
+            Assert.AreEqual("S7 Ep7 Genitori sbagliati/angelo della morteRosanna e' violentata in casa propria da un uomo mascherato che sembra non aver lasciato tracce: la giovane donna, sconvolta, ricorda solo che l'aggressore   aveva una lieve zoppia...Anna (Giulia Bevilacqua) e Irene (Francesca Inaudi) indagano sul caso, che presenta analogie con altri stupri rimasti irrisolti.\r\n    L'agente Guerra (Daniela Morozzi) ed Ingargiola (Gianni Ferreri) hanno invece il compito di rintracciare un detenuto evaso, strana coincidenza,   il giorno stesso che viene denunciato il furto di un prezioso pianoforte...   \r\n  Anna (Giulia Bevilacqua) e Irene (Francesca Inaudi)  sono  in un locale dove una donna ubriaca, Gabriella, sembra aver bisogno del loro aiuto. Le due agenti la accompagnano a casa e li' scoprono il corpo  senza  vita del quattordicenne Enrico, il figlio autistico della donna, immediatamente arrestata.\r\n  Ingargiola (Gianni Ferreri) e Vittoria (Daniela  Morozzi)  sono invece  sulle tracce di un celebre ipnotizzatore che spinge le sue vittime a consegn...\r\nVISIONE CONSIGLIATA CON LA PRESENZA DI UN ADULTO.", ev.Text);
+            Assert.AreEqual(new DateTime(2023, 08, 16, 17, 13, 54), ev.StartTime);
+            Assert.AreEqual(new DateTime(2023, 08, 16, 19, 14, 31), ev.FinishTime);
+        }
+
+        [TestMethod]
+        public void TestEITIt2()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}EIT.IT2.bin");
+
+            var packets = MPEGTransportStreamPacket.Parse(packetBytes);
+
+            var EIT = DVBTTable.CreateFromPackets<EITTable>(packets, 18);
+
+            Assert.IsNotNull(EIT);
+            Assert.IsTrue(EIT.CRCIsValid());
+
+            Assert.AreEqual(4, EIT.EventItems.Count);
+
+            var eventsDict = new Dictionary<int, EventItem>();
+            foreach (var ev in EIT.EventItems)
+            {
+                eventsDict.Add(ev.EventId, ev);
+            }
+
+            Assert.AreEqual("Un altro domani - PrimaTv", eventsDict[31936].EventName);
+            Assert.AreEqual("S1 Ep252Julia e Leo vanno avanti con i preparativi del matrimonio, contro tutto e tutti. E se Diana era contraria, i genitori di Leo non sembrano essere da meno.\r\nVISIONE CONSIGLIATA CON LA PRESENZA DI UN ADULTO.\r\nQUESTO PROGRAMMA E' SOTTOTITOLATO.", eventsDict[31936].Text);
+            Assert.AreEqual(new DateTime(2023, 08, 16, 17, 40, 5), eventsDict[31936].StartTime);
+            Assert.AreEqual(new DateTime(2023, 08, 16, 18, 46, 41), eventsDict[31936].FinishTime);
+
+            Assert.AreEqual("The wall estate", eventsDict[31937].EventName);
+            Assert.AreEqual("The wall '23  estate '23", eventsDict[31937].Text);
+            Assert.AreEqual(new DateTime(2023, 08, 16, 18, 46, 41), eventsDict[31937].StartTime);
+            Assert.AreEqual(new DateTime(2023, 08, 16, 19, 35, 25), eventsDict[31937].FinishTime);
+
+            Assert.AreEqual("Tg5 anticipazione,", eventsDict[31938].EventName);
+            Assert.AreEqual("", eventsDict[31938].Text);
+            Assert.AreEqual(new DateTime(2023, 08, 16, 19, 35, 25), eventsDict[31938].StartTime);
+            Assert.AreEqual(new DateTime(2023, 08, 16, 19, 54, 01), eventsDict[31938].FinishTime);
+
+            Assert.AreEqual("Tg5 Prima Pagina", eventsDict[31939].EventName);
+            Assert.AreEqual("TELEGIORNALE 4 - Italia, 2023Sintesi delle notizie principali del giorno.", eventsDict[31939].Text);
+            Assert.AreEqual(new DateTime(2023, 08, 16, 19, 54, 01), eventsDict[31939].StartTime);
+            Assert.AreEqual(new DateTime(2023, 08, 16, 20, 00, 51), eventsDict[31939].FinishTime);
         }
     }
 }

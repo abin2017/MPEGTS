@@ -14,12 +14,12 @@ namespace MPEGTS
         {
             var res = new ShortEventDescriptor();
 
-            res.Tag = bytes[startPos+0];
-            res.Length = bytes[startPos+1];
+            res.Tag = bytes[startPos + 0];
+            res.Length = bytes[startPos + 1];
 
-            res.LanguageCode = Encoding.GetEncoding("iso-8859-1").GetString(bytes, startPos+2, 3);
+            res.LanguageCode = Encoding.GetEncoding("iso-8859-1").GetString(bytes, startPos + 2, 3);
 
-            var eventNameLength = bytes[startPos+5];
+            var eventNameLength = bytes[startPos + 5];
 
             var pos = startPos + 6;
 

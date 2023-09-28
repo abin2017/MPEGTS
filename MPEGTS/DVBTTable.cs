@@ -44,7 +44,6 @@ namespace MPEGTS
                         Console.WriteLine("CRC not valid");
                     }
 
-
                 } catch (Exception ex)
                 {
                     Console.WriteLine(ex);
