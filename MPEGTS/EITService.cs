@@ -109,10 +109,6 @@ namespace MPEGTS
                                 }
                             }
                         }
-                        catch (MPEGTSUnsupportedEncodingException)
-                        {
-                            res.UnsupportedEncoding = true;
-                        }
                         catch (Exception ex)
                         {
                             // Bad data EIT data

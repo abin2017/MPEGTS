@@ -387,12 +387,15 @@ namespace Tests
             Assert.AreEqual(new DateTime(2023, 08, 16, 20, 00, 51), eventsDict[31939].FinishTime);
         }
 
+        /// <summary>
+        /// EIT with non standard encoding 0x10
+        /// </summary>
         [TestMethod]
-        public void TestEITUA()
+        public void TestEIT2()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}EIT.UA.bin");
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}EIT2.bin");
 
             var packets = MPEGTransportStreamPacket.Parse(packetBytes);
 

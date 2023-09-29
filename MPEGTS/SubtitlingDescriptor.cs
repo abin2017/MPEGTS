@@ -26,7 +26,7 @@ namespace MPEGTS
             {
                 var info = new SubtitlingInfo();
 
-                info.LanguageCode = MPEGTSCharReader.ReadString(bytes, pos, 3, false);
+                info.LanguageCode = MPEGTSCharReader.ReadString(bytes, pos, 3);
                 info.SubtitlingType = bytes[pos + 3];
                 info.CompositionPageId = Convert.ToInt32(((bytes[pos + 4]) << 8) + bytes[pos + 5]);
                 info.AncillaryPageId = Convert.ToInt32(((bytes[pos + 6]) << 8) + bytes[pos + 7]);

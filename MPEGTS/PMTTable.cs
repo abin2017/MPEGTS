@@ -114,7 +114,7 @@ namespace MPEGTS
                     else
                     if (descriptorTag == 0xA)  // 10
                     {
-                        stream.LangugeAndAudioType = MPEGTSCharReader.ReadString(descriptorBytes, 2, descriptorLength, false);
+                        stream.LangugeAndAudioType = MPEGTSCharReader.ReadString(descriptorBytes, 2, descriptorLength);
                     }
                     else
                     {

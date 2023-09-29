@@ -25,11 +25,6 @@ namespace MPEGTS
             res.DescriptorNumber = Convert.ToByte(numberAndLength >> 4);
             res.LastDescriptorNumber = Convert.ToByte(numberAndLength & 15);
 
-            if (res.LastDescriptorNumber != 0)
-            {
-
-            }
-
             res.LanguageCode = Encoding.GetEncoding("iso-8859-1").GetString(bytes, startPos + 3, 3);
 
             var itemsLength = bytes[startPos + 6];
@@ -42,7 +37,7 @@ namespace MPEGTS
             {
                 var textLength = bytes[pos];
 
-                res.Text = MPEGTSCharReader.ReadString(bytes, pos + 1, textLength, true);
+                res.Text = MPEGTSCharReader.ReadString(bytes, pos + 1, textLength);
             }
 
             return res;
