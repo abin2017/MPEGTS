@@ -8,7 +8,7 @@ using System.Text;
 namespace Tests
 {
     [TestClass]
-    public class Tests
+    public class DVBTTablesTests
     {
         [TestMethod]
         public void TestPSI()

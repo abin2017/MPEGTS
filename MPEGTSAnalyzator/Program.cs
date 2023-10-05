@@ -210,6 +210,10 @@ namespace MPEGTSAnalyzator
                         pcrPacketsCount++;
                         var msTime = packet.GetPCRClock().Value / 27000000;
 
+                        MPEGTransportStreamPacket.SavePacketsToFile(new List<MPEGTransportStreamPacket>() { packet }, @"c:\temp\packet001.bin");
+
+                        Console.WriteLine($"PCR: {msTime}");
+
                         if (msTime < minPCR)
                         {
                             minPCR = msTime;
