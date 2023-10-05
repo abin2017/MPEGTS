@@ -41,7 +41,7 @@ namespace MPEGTS
 
         public List<byte> Header { get; set; } = new List<byte>();
         public List<byte> Payload { get; set; } = new List<byte>();
-        public List<byte> AdaptationFiled { get; set; } = new List<byte>();
+        public List<byte> AdaptationField { get; set; } = new List<byte>();
 
         public static void WriteByteArrayAsListToConsole(byte[] bytes)
         {
@@ -453,10 +453,13 @@ namespace MPEGTS
                         break;
                     default:
 
-                        Payload.Add(b);
-
                         switch (AdaptationFieldControl)
                         {
+                            case AdaptationFieldControlEnum.Unknown:
+                            case AdaptationFieldControlEnum.NoAdaptationFieldPayloadOnly:
+                                Payload.Add(b);
+                                break;
+
                             case AdaptationFieldControlEnum.AdaptationFieldFollowedByPayload:
                             case AdaptationFieldControlEnum.AdaptationFieldOnlyNoPayload:
 
@@ -481,7 +484,13 @@ namespace MPEGTS
                                     PCR.Add(b);
                                 }
 
-                                AdaptationFiled.Add(b);
+                                if (AdaptationFieldLength > 0 && bytePos >= 4 && bytePos < 4 + AdaptationFieldLength)
+                                {
+                                    AdaptationField.Add(b);
+                                } else
+                                {
+                                    Payload.Add(b);
+                                }
 
                                 break;
                         }

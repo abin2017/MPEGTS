@@ -13,10 +13,6 @@ namespace MPEGTSAnalyzator
     {
         public static void Main(string[] args)
         {
-            //var packetBytes = File.ReadAllBytes($@"C:\Users\Jean Luc Picard\source\repos\MPEGTS\MPEGTSTests\TestData\EIT.IT.bin");
-            //var packets = MPEGTransportStreamPacket.Parse(packetBytes);
-            //var EIT = DVBTTable.CreateFromPackets<EITTable>(packets, 18);
-
             if (args != null &&
                 args.Length >= 0 &&
                 FileNameParamValue(args) != null)
@@ -34,14 +30,6 @@ namespace MPEGTSAnalyzator
                 Console.WriteLine("MPEGTSAnalyzator.exe file.ts [--eit]");
                 Console.WriteLine();
                 Console.WriteLine();
-
-#if DEBUG
-                AnalyzeMPEGTSPackets("TestData.CZ" + Path.DirectorySeparatorChar + "CT2.ts", false);
-
-                Console.WriteLine("Press Enter");
-                Console.ReadLine();
-#endif
-
             }
         }
 
@@ -86,7 +74,6 @@ namespace MPEGTSAnalyzator
             var packets = MPEGTransportStreamPacket.Parse(bytes);
 
             Console.WriteLine($" {packets.Count} packets found");
-
 
             var packetsByPID = MPEGTransportStreamPacket.SortPacketsByPID(packets);
 
@@ -205,12 +192,10 @@ namespace MPEGTSAnalyzator
 
                 foreach (var packet in packets)
                 {
-                    if (packet.PID == pmtTable.PCRPID && packet.PCRFlag)
+                    if (packet.PID == pmtTable.PCRPID && packet.PCRFlag && !packet.TransportErrorIndicator)
                     {
                         pcrPacketsCount++;
                         var msTime = packet.GetPCRClock().Value / 27000000;
-
-                        MPEGTransportStreamPacket.SavePacketsToFile(new List<MPEGTransportStreamPacket>() { packet }, @"c:\temp\packet001.bin");
 
                         Console.WriteLine($"PCR: {msTime}");
 
