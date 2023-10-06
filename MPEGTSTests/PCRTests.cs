@@ -47,5 +47,14 @@ namespace Tests
                 Assert.AreEqual((ulong)41815, pcrClock);
             }
         }
+
+        [TestMethod]
+        public void TestPCRFromPacketWithErrorIndicator()
+        {
+            var buffer = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}Packet002.bin");
+            var pcrClock = MPEGTransportStreamPacket.GetFirstPCRClock(1110, buffer, 0);
+
+            Assert.IsNull(pcrClock);
+        }
     }
 }

@@ -366,7 +366,7 @@ namespace MPEGTS
 
         public static ulong? GetFirstPCRClock(long PID, byte[] buffer, int offset = 0)
         {
-            while (offset + 188 < buffer.Length)
+            while (offset + 188 <= buffer.Length)
             {
                 var syncByte = buffer[offset];
 
@@ -379,18 +379,22 @@ namespace MPEGTS
 
                 if (packetPID == PID)
                 {
-                    var adaptationFieldControl = (AdaptationFieldControlEnum)((buffer[offset + 3] & 48) >> 4);
+                    var transportErrorIndicator = (buffer[offset + 1] & 128) == 128;
 
-                    if (adaptationFieldControl == AdaptationFieldControlEnum.AdaptationFieldFollowedByPayload ||
-                        adaptationFieldControl == AdaptationFieldControlEnum.AdaptationFieldOnlyNoPayload)
+                    if (!transportErrorIndicator)
                     {
-                        var adaptationFieldLength = buffer[offset + 4];
-                        if (adaptationFieldLength > 6)  // 1 for flag, 6 for PCR
+                        var adaptationFieldControl = (AdaptationFieldControlEnum)((buffer[offset + 3] & 48) >> 4);
+
+                        if (adaptationFieldControl == AdaptationFieldControlEnum.AdaptationFieldFollowedByPayload ||
+                            adaptationFieldControl == AdaptationFieldControlEnum.AdaptationFieldOnlyNoPayload)
                         {
-                            var PCRFlag = (buffer[offset + 5] & 16) == 16;
-                            if (PCRFlag)
+                            var adaptationFieldLength = buffer[offset + 4];
+                            if (adaptationFieldLength > 6)  // 1 for flag, 6 for PCR
                             {
-                                var pcr = new List<byte>()
+                                var PCRFlag = (buffer[offset + 5] & 16) == 16;
+                                if (PCRFlag)
+                                {
+                                    var pcr = new List<byte>()
                                 {
                                     buffer[offset + 6],
                                     buffer[offset + 7],
@@ -400,10 +404,11 @@ namespace MPEGTS
                                     buffer[offset + 11]
                                 };
 
-                                var clock = GetPCRClock(pcr);
-                                return clock / 27000000;
-                            }
+                                    var clock = GetPCRClock(pcr);
+                                    return clock / 27000000;
+                                }
 
+                            }
                         }
                     }
                 }
