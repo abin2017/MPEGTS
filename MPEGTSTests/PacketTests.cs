@@ -3,6 +3,7 @@ using MPEGTS;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace Tests
 {
@@ -85,6 +86,24 @@ namespace Tests
                 Assert.IsNotNull(packet);
                 Assert.IsTrue(packet.TransportErrorIndicator);
             }
+        }
+
+        [TestMethod]
+        public void TestParsePacketsWithErrorIndicator()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}EIT3.bin");
+
+            // total 33 packets, one with TransportErrorIndicator=1
+            // - first 12 packets (1728 bytes => 12*184) belong together, but one of them has TransportErrorIndicator=1
+            // - EIT should be created from next 7 packets (1210 bytes)
+            var packets = MPEGTransportStreamPacket.Parse(packetBytes);
+
+            var EIT = DVBTTable.CreateFromPackets<EITTable>(packets, 18);
+
+            Assert.IsNotNull(EIT);
+            Assert.AreEqual(1210, EIT.Data.Length);
         }
     }
 }

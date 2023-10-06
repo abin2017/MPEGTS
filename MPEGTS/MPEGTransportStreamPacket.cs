@@ -146,10 +146,12 @@ namespace MPEGTS
         {
             var res = new StringBuilder();
 
-            res.AppendLine($"{"PID",10}{"AdF.Ctrl",10}{"AdF.Len",10}{"Con.Cn.",10}{"Start",10}");
+            int pos = 0;
+            res.AppendLine($"{"#",5}{"PID",10}{"AdF.Ctrl",10}{"AdF.Len",10}{"Con.Cn.",10}{"Start",10}{"Err",10}");
             foreach (var packet in packets)
             {
-                res.AppendLine($"{packet.PID,10}{(int)packet.AdaptationFieldControl,10}{(int)packet.AdaptationFieldLength,10}{(int)packet.ContinuityCounter,10}{Convert.ToInt32(packet.PayloadUnitStartIndicator),10}");
+                res.AppendLine($"{pos,5}{packet.PID,10}{(int)packet.AdaptationFieldControl,10}{(int)packet.AdaptationFieldLength,10}{(int)packet.ContinuityCounter,10}{Convert.ToInt32(packet.PayloadUnitStartIndicator),10}{Convert.ToInt32(packet.TransportErrorIndicator),10}");
+                pos++;
             }
 
             return res.ToString();
@@ -594,7 +596,7 @@ namespace MPEGTS
 
             while (pos + 188 <= endPos)
             {
-                for (var i=0;i<188;i++)
+                for (var i = 0; i < 188; i++)
                 {
                     buff[i] = bytes[pos + i];
                 }
@@ -602,10 +604,12 @@ namespace MPEGTS
                 var packet = new MPEGTransportStreamPacket();
                 packet.ParseBytes(buff);
 
-                if (
+                if (!packet.TransportErrorIndicator &&
+                    (
                         (PIDFilter == -1)  // add all packets
                         ||
                         ((PIDFilter != -1) && (packet.PID == PIDFilter))
+                    )
                    )
                 {
                     res.Add(packet);
