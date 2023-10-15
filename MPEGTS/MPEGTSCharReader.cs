@@ -113,7 +113,7 @@ namespace MPEGTS
 
                 string txt = null;
 
-                switch (characterTableByte)
+                    switch (characterTableByte)
                 {
                     case 1:
                         // ISO 8859-5 Latin/Cyrillic alphabet - see table A.2
@@ -135,6 +135,9 @@ namespace MPEGTS
                         // ISO 8859-9 Latin/Arabic alphabet - see table A.6
                         txt = System.Text.Encoding.GetEncoding("iso-8859-9").GetString(bytes, index, count);
                         break;
+                    case 0x15: // UTF - 8 encoding of ISO / IEC 10646[52] BMP
+                        txt = System.Text.Encoding.UTF8.GetString(bytes, index, count);
+                        break;
                     case 0x06: // ISO / IEC 8859 - 10[47] Latin alphabet No. 6 Figure A.7
                     case 0x07: // ISO / IEC 8859 - 11[48] Latin / Thai(draft only) Figure A.8
                     case 0x08: // reserved for future use (see NOTE)
@@ -145,7 +148,6 @@ namespace MPEGTS
                     case 0x12: // KS X 1001 - 2014[54] Korean character set
                     case 0x13: // GB - 2312 - 1980[53] Simplified Chinese character set
                     case 0x14: // Big5 subset of ISO/IEC 10646 [16] Traditional Chinese
-                    case 0x15: // UTF - 8 encoding of ISO / IEC 10646[52] BMP
                     default:
                         return string.Empty;
                 }

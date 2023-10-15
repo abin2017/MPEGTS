@@ -404,5 +404,31 @@ namespace Tests
             Assert.IsNotNull(EIT);
             Assert.IsTrue(EIT.CRCIsValid());
         }
+
+        /// <summary>
+        /// Polish EIT with UTF8 encoding
+        /// </summary>
+        [TestMethod]
+        public void TestEITPL()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}EIT.PL.bin");
+
+            var packet = MPEGTransportStreamPacket.Parse(packetBytes);
+
+            var EIT = DVBTTable.CreateFromPackets<EITTable>(packet, 18);
+
+            Assert.IsNotNull(EIT);
+
+            Assert.AreEqual(5, EIT.EventItems.Count);
+
+            var ev = EIT.EventItems[0];
+
+            Assert.AreEqual("Zakup kontrolowany: odc.355", ev.EventName);
+            Assert.AreEqual(" magazyn motoryzacyjny (Polska, 2018) odc.355 Wojtek niedawno sprzedał Volvo V40 i teraz ma 25 tysięcy złotych na mocniejszy i nowszy samochód. Adam Kornacki przedstawi mu kilka modeli kombi, sedana i hatchbacka. Od lat: 12", ev.Text);
+            Assert.AreEqual(new DateTime(2023, 10, 15, 05, 25, 0), ev.StartTime);
+            Assert.AreEqual(new DateTime(2023, 10, 15, 06, 20, 0), ev.FinishTime);
+        }
     }
 }

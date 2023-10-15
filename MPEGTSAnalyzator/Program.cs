@@ -232,7 +232,6 @@ namespace MPEGTSAnalyzator
 
                         if (eitTable != null)
                         {
-
                             foreach (var ev in eitTable.EventItems)
                             {
                                 Console.WriteLine(ev.WriteToString());
