@@ -147,10 +147,6 @@ namespace MPEGTS
                         // ISO/IEC 8859-13
                         txt = System.Text.Encoding.GetEncoding("iso-8859-13").GetString(bytes, index, count);
                         break;
-                    case 0xA:
-                        // ISO/IEC 8859-14
-                        txt = System.Text.Encoding.GetEncoding("iso-8859-14").GetString(bytes, index, count);
-                        break;
                     case 0xB:
                         // ISO/IEC 8859-15
                         txt = System.Text.Encoding.GetEncoding("iso-8859-15").GetString(bytes, index, count);
@@ -165,6 +161,7 @@ namespace MPEGTS
                         break;
 
                     case 0x08: // reserved for future use (see NOTE)
+                    case 0x0A: // ISO/IEC 8859-14 not supported in .NET!
                     case 0x10: // dynamically selected part of ISO / IEC 8859
                     case 0x12: // KS X 1001 - 2014[54] Korean character set
                     case 0x13: // GB - 2312 - 1980[53] Simplified Chinese character set
