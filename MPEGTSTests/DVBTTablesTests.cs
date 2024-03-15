@@ -320,6 +320,28 @@ namespace Tests
             Assert.AreEqual(new DateTime(2023, 07, 28, 14, 00, 0), eventsDict[469].FinishTime);
         }
 
+
+        [TestMethod]
+        public void TestEITGR()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            var eitBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}EIT.GR.bin");
+
+            var EIT = new EITTable();
+            EIT.Parse(new List<byte>(eitBytes));
+
+            Assert.IsNotNull(EIT);
+            Assert.IsTrue(EIT.CRCIsValid());
+
+            Assert.AreEqual(1, EIT.EventItems.Count);
+
+            Assert.AreEqual("Die Diebin & der General", EIT.EventItems[0].EventName);
+            Assert.AreEqual("Fernsehfilm Deutschland 2005Es ist schon eine ungewöhnliche Freundschaft zwischen Walter Voss, genannt \"Der General\", und seiner Pflegerin Jessie. Die alleinerziehende Mutter wurde wegen Ladendiebstahls und Sachbeschädigung zu gemeinnütziger Arbeit in einem Altenpflegeheim verurteilt. Doch als die kostbare Taschenuhr des Generals plötzlich verschwindet, gerät Jessie in Verdacht: einmal Diebin, immer Diebin.\u008a\"Die Diebin & der General\" ist eine lebensnahe, gesellschaftskritische Komödie mit Humor und Gefühl. Katja Riemann in der Rolle der chaotischen Mutter und Jürgen Hentsch als liebenswürdiger Querkopf zeigen eine bewegende Darstellung.", EIT.EventItems[0].Text);
+            Assert.AreEqual(new DateTime(2024, 03, 12, 14, 30, 0), EIT.EventItems[0].StartTime);
+            Assert.AreEqual(new DateTime(2024, 03, 12, 16, 00, 0), EIT.EventItems[0].FinishTime);
+        }
+
         [TestMethod]
         public void TestEITIt()
         {
