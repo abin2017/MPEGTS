@@ -143,5 +143,36 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="TestData.Germany\DVBT-MPEGTS-474MHz-2024-03-12-14-32-36.ts">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="TestData.Germany\DVBT-MPEGTS-490MHz-2024-03-12-16-04-52.ts">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="TestData.Germany\DVBT-MPEGTS-530MHz-2024-03-11-20-42-48.ts">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="TestData.Germany\DVBT-MPEGTS-530MHz-2024-03-11-20-46-08.ts">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="TestData.Germany\DVBT-MPEGTS-530MHz-2024-03-11-20-49-07.ts">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="TestData.Germany\DVBT-MPEGTS-626MHz-2024-03-11-21-08-27.ts">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="TestData.Germany\DVBT-MPEGTS-626MHz-2024-03-11-21-09-12.ts">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="TestData.Germany\DVBT-MPEGTS-626MHz-2024-03-11-21-09-56.ts">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="TestData.IT\DVBT-MPEGTS-650MHz-2024-03-12-16-50-02.ts">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

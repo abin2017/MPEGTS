@@ -17,8 +17,8 @@ namespace MPEGTSAnalyzator
                 args.Length >= 0 &&
                 FileNameParamValue(args) != null)
             {
-                var fName = FileNameParamValue(args);
-                AnalyzeMPEGTSPackets(fName, EITParamValue(args));
+                // GetParamValue(args, "interactive")
+                AnalyzeMPEGTSPackets(FileNameParamValue(args), GetParamValue(args,"eit"), true);
             }
             else
             {
@@ -27,17 +27,17 @@ namespace MPEGTSAnalyzator
                 Console.WriteLine();
                 Console.WriteLine("Usage:");
                 Console.WriteLine();
-                Console.WriteLine("MPEGTSAnalyzator.exe file.ts [--eit]");
+                Console.WriteLine("MPEGTSAnalyzator.exe file.ts [--eit] [--interactive]");
                 Console.WriteLine();
                 Console.WriteLine();
             }
         }
 
-        public static bool EITParamValue(string[] args)
+        private static bool GetParamValue(string[] args, string name)
         {
             foreach (string arg in args)
             {
-                if (arg.ToLower() == "--eit")
+                if (arg.ToLower() == $"--{name}")
                 {
                     return true;
                 }
@@ -50,7 +50,7 @@ namespace MPEGTSAnalyzator
         {
             foreach (string arg in args)
             {
-                if (arg.ToLower() != "--eit")
+                if (!arg.ToLower().StartsWith("--"))
                 {
                     return arg;
                 }
@@ -59,7 +59,7 @@ namespace MPEGTSAnalyzator
             return null;
         }
 
-        public static void AnalyzeMPEGTSPackets(string path, bool includeEIT = true)
+        public static void AnalyzeMPEGTSPackets(string path, bool includeEIT = true, bool interactive = false)
         {
             var logger = new FileLoggingService(LoggingLevelEnum.Debug);
             logger.LogFilename = "Log.log";
@@ -197,8 +197,6 @@ namespace MPEGTSAnalyzator
                         pcrPacketsCount++;
                         var msTime = packet.GetPCRClock().Value / 27000000;
 
-                        Console.WriteLine($"PCR: {msTime}");
-
                         if (msTime < minPCR)
                         {
                             minPCR = msTime;
@@ -214,6 +212,19 @@ namespace MPEGTSAnalyzator
                 Console.WriteLine($"Min:             {minPCR}");
                 Console.WriteLine($"Max:             {maxPCR}");
                 Console.WriteLine($"Duration:        {(maxPCR - minPCR) / 60}:{(maxPCR - minPCR)-((maxPCR-minPCR)/60)*60}");
+            }
+
+            if (interactive && !includeEIT)
+            {
+                Console.WriteLine();
+                //Console.WriteLine("<ENTER>");
+                //Console.ReadLine();
+
+                Console.WriteLine("Show EIT? [y]");
+                if (Console.ReadLine().ToLower()=="y")
+                {
+                    includeEIT = true;
+                }
             }
 
             if (includeEIT)
@@ -239,6 +250,13 @@ namespace MPEGTSAnalyzator
                         }
                     }
                 }
+            }
+
+            if (interactive && includeEIT)
+            {
+                Console.WriteLine();
+                Console.WriteLine("<ENTER>");
+                Console.ReadLine();
             }
         }
 

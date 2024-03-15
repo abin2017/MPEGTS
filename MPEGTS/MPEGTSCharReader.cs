@@ -7,9 +7,8 @@ namespace MPEGTS
     public class MPEGTSCharReader
     {
         /// <summary>
-        ///  https://en.wikipedia.org/wiki/T.51/ISO/IEC_6937
-        ///  https://www.etsi.org/deliver/etsi_en/300400_300499/300468/01.03.01_60/en_300468v010301p.pdf
-        ///  https://dvb.org/wp-content/uploads/2019/08/A038r14_Specification-for-Service-Information-SI-in-DVB-Systems_Draft_EN_300-468-v1-17-1_Dec-2021.pdf
+        ///  [0] https://en.wikipedia.org/wiki/T.51/ISO/IEC_6937
+        ///  [1] https://dvb.org/wp-content/uploads/2019/08/A038r14_Specification-for-Service-Information-SI-in-DVB-Systems_Draft_EN_300-468-v1-17-1_Dec-2021.pdf
         /// </summary>
         /// <value>The</value>
         public static Dictionary<byte, Tuple<string, string>> ISO6937Table { get; set; } =
@@ -113,7 +112,8 @@ namespace MPEGTS
 
                 string txt = null;
 
-                    switch (characterTableByte)
+                // [1] see Table A.3: Character coding table
+                switch (characterTableByte)
                 {
                     case 1:
                         // ISO 8859-5 Latin/Cyrillic alphabet - see table A.2
@@ -135,16 +135,37 @@ namespace MPEGTS
                         // ISO 8859-9 Latin/Arabic alphabet - see table A.6
                         txt = System.Text.Encoding.GetEncoding("iso-8859-9").GetString(bytes, index, count);
                         break;
-                    case 0x15: // UTF - 8 encoding of ISO / IEC 10646[52] BMP
+                    case 6:
+                        // ISO/IEC 8859-10
+                        txt = System.Text.Encoding.GetEncoding("iso-8859-10").GetString(bytes, index, count);
+                        break;
+                    case 7:
+                        // ISO/IEC 8859-11
+                        txt = System.Text.Encoding.GetEncoding("iso-8859-11").GetString(bytes, index, count);
+                        break;
+                    case 9:
+                        // ISO/IEC 8859-13
+                        txt = System.Text.Encoding.GetEncoding("iso-8859-13").GetString(bytes, index, count);
+                        break;
+                    case 0xA:
+                        // ISO/IEC 8859-14
+                        txt = System.Text.Encoding.GetEncoding("iso-8859-14").GetString(bytes, index, count);
+                        break;
+                    case 0xB:
+                        // ISO/IEC 8859-15
+                        txt = System.Text.Encoding.GetEncoding("iso-8859-15").GetString(bytes, index, count);
+                        break;
+                    case 0x11:
+                        // Unicode - ISO/IEC 10646 [52]
+                        txt = System.Text.Encoding.Unicode.GetString(bytes, index, count);
+                        break;
+                    case 0x15:
+                        // UTF - 8 encoding of ISO / IEC 10646[52] BMP
                         txt = System.Text.Encoding.UTF8.GetString(bytes, index, count);
                         break;
-                    case 0x06: // ISO / IEC 8859 - 10[47] Latin alphabet No. 6 Figure A.7
-                    case 0x07: // ISO / IEC 8859 - 11[48] Latin / Thai(draft only) Figure A.8
+
                     case 0x08: // reserved for future use (see NOTE)
-                    case 0x09: // ISO / IEC 8859 - 13[49]  Latin alphabet No. 7 Figure A.9
-                    case 0x0A: // ISO / IEC 8859 - 14[50] Latin alphabet No. 8(Celtic) Figure A.10
-                    case 0x0B: // ISO / IEC 8859 - 15[51] Latin alphabet No. 9 Figure A.11
-                    case 0x11: // ISO / IEC 10646[52] BMP
+                    case 0x10: // dynamically selected part of ISO / IEC 8859
                     case 0x12: // KS X 1001 - 2014[54] Korean character set
                     case 0x13: // GB - 2312 - 1980[53] Simplified Chinese character set
                     case 0x14: // Big5 subset of ISO/IEC 10646 [16] Traditional Chinese
