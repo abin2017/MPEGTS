@@ -564,6 +564,11 @@ namespace MPEGTS
 
         public static List<MPEGTransportStreamPacket> Parse(byte[] bytes, int PIDFilter = -1)
         {
+            if (bytes == null)
+            {
+                return new List<MPEGTransportStreamPacket>();
+            }
+
             return Parse(new List<byte>(bytes), PIDFilter);
         }
 
@@ -586,14 +591,17 @@ namespace MPEGTS
 
         public static List<MPEGTransportStreamPacket> Parse(byte[] bytes, int startPos, int endPos = -1, int PIDFilter = -1)
         {
-            var pos = FindSyncBytePosition(bytes, startPos, endPos);
+            var res = new List<MPEGTransportStreamPacket>();
+
+            if (bytes == null || bytes.Length < 188)
+                return res;
+
             if (endPos == -1)
             {
                 endPos = bytes.Length;
             }
 
-            var res = new List<MPEGTransportStreamPacket>();
-
+            var pos = FindSyncBytePosition(bytes, startPos, endPos);
             if (pos == -1)
                 return res;
 

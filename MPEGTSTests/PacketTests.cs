@@ -105,5 +105,25 @@ namespace Tests
             Assert.IsNotNull(EIT);
             Assert.AreEqual(1210, EIT.Data.Length);
         }
+
+        [TestMethod]
+        public void TestParseEmptyPackets()
+        {
+            var packets = MPEGTransportStreamPacket.Parse(new byte[0]);
+
+            Assert.IsNotNull(packets);
+            Assert.AreEqual(packets.Count, 0);
+        }
+
+        [TestMethod]
+        public void TestParseNULLPackets()
+        {
+            byte[] ar = null;
+
+            var packets = MPEGTransportStreamPacket.Parse(ar);
+
+            Assert.IsNotNull(packets);
+            Assert.AreEqual(packets.Count, 0);
+        }
     }
 }

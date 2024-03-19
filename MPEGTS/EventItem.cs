@@ -56,6 +56,11 @@ namespace MPEGTS
             return 0;
         }
 
+        public override string ToString()
+        {
+            return ($"EventItem: {StartTime.ToString("dd.MM.yyyy")} {StartTime.ToString("HH:mm")}-{FinishTime.ToString("HH:mm")} {EventName}");
+        }
+
         public string WriteToString()
         {
             return ($"{ServiceId,14} {StartTime.ToString("dd.MM.yyyy")} {StartTime.ToString("HH:mm")}-{FinishTime.ToString("HH:mm")} {TextValue}");
