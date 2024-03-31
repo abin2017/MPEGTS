@@ -29,7 +29,7 @@ namespace MPEGTS
                 { 0xCF, new Tuple<string, string>("CDELNRSTZcdelnrstz", "ČĎĚĽŇŘŠŤŽčďěľňřšťž")},
             };
 
-        public static string[] CelticLatin = new string[256]  // Character code table 0A - Latin/Celtic alphabet with Unicode equivalents
+        public static string[] ISO_8859_10 = new string[256]
         {
             "","","","","","","","","","","","","","","","",   //  0 .. 15
             "","","","","","","","","","","","","","","","",   // 16 .. 31
@@ -41,12 +41,35 @@ namespace MPEGTS
             "\u0070","\u0071","\u0072","\u0073","\u0074","\u0075","\u0076","\u0077","\u0078","\u0079","\u007A","\u007B","\u007C","\u007D","\u007E","",   // 128
             "","","","","","","","","","","","","","","","",   // 144
             "","","","","","","","","","","","","","","","",   // 160
-            "\u00A0","\u1E02","\u1E03","\u00A3","\u010A","\u010B","\u1E0A","\u00A7","\u1E80","\u00A9","\u1E82","\u1E0B","\u1EF2","\u00AD","\u00AE","\u0178",   // 176
-            "\u1E1E","\u1E1F","\u0120","\u0121","\u1E40","\u1E41","\u00B6","\u1E56","\u1E81","\u1E57","\u1E83","\u1E60","\u1EF3","\u1E84","\u1E85","\u1E61",   // 192
-            "\u00C0","\u00C1","\u00C2","\u00C3","\u00C4","\u00C5","\u00C6","\u00C7","\u00C8","\u00C9","\u00CA","\u00CB","\u00CC","\u00CD","\u00CE","\u00CF",   // 208
-            "\u0174","\u00D1","\u00D2","\u00D3","\u00D4","\u00D5","\u00D6","\u00D7","\u00D8","\u00D9","\u00DA","\u00DB","\u00DC","\u00DD","\u0176","\u00DF",   // 224
-            "\u00E0","\u00E1","\u00E2","\u00E3","\u00E4","\u00E5","\u00E6","\u00E7","\u00E8","\u00E9","\u00EA","\u00EB","\u00EC","\u00ED","\u00EE","\u00EF",   // 240
-            "\u0175","\u00F1","\u00F2","\u00F3","\u00F4","\u00F5","\u00F6","\u1E6B","\u00F8","\u00F9","\u00FA","\u00FB","\u00FC","\u00FD","\u0177","\u00FF"    // 256
+            "\u00A0","\u0104","\u0112","\u0122","\u012A","\u0128","\u0136","\u00A7","\u013B","\u0110","\u0160","\u0166","\u017D","\u00AD","\u016A","\u014A",
+            "\u00B0","\u0105","\u0113","\u0123","\u012B","\u0129","\u0137","\u00B7","\u013C","\u0111","\u0161","\u0167","\u017E","\u2015","\u016B","\u014B",
+            "\u0100","\u00C1","\u00C2","\u00C3","\u00C4","\u00C5","\u00C6","\u012E","\u010C","\u00C9","\u0118","\u00CB","\u0116","\u00CD","\u00CE","\u00CF",
+            "\u00D0","\u0145","\u014C","\u00D3","\u00D4","\u00D5","\u00D6","\u0168","\u00D8","\u0172","\u00DA","\u00DB","\u00DC","\u00DD","\u00DE","\u00DF",
+            "\u0101","\u00E1","\u00E2","\u00E3","\u00E4","\u00E5","\u00E6","\u012F","\u010D","\u00E9","\u0119","\u00EB","\u0117","\u00ED","\u00EE","\u00EF",
+            "\u00F0","\u0146","\u014D","\u00F3","\u00F4","\u00F5","\u00F6","\u0169","\u00F8","\u0173","\u00FA","\u00FB","\u00FC","\u00FD","\u00FE","\u0138"
+        };
+
+        public static string[] ISO_8859_13 = new string[256]
+        {
+            "","","","","","","","","","","","","","","","",   //  0 .. 15
+            "","","","","","","","","","","","","","","","",   // 16 .. 31
+            "\u0020","\u0021","\u0022","\u0023","\u0024","\u0025","\u0026","\u0027","\u0028","\u0029","\u002A","\u002B","\u002C","\u002D","\u002E","\u002F",   // 32
+            "\u0030","\u0031","\u0032","\u0033","\u0034","\u0035","\u0036","\u0037","\u0038","\u0039","\u003A","\u003B","\u003C","\u003D","\u003E","\u003F",   // 64
+            "\u0040","\u0041","\u0042","\u0043","\u0044","\u0045","\u0046","\u0047","\u0048","\u0049","\u004A","\u004B","\u004C","\u004D","\u004E","\u004F",   // 80
+            "\u0050","\u0051","\u0052","\u0053","\u0054","\u0055","\u0056","\u0057","\u0058","\u0059","\u005A","\u005B","\u005C","\u005D","\u005E","\u005F",   // 96
+            "\u0060","\u0061","\u0062","\u0063","\u0064","\u0065","\u0066","\u0067","\u0068","\u0069","\u006A","\u006B","\u006C","\u006D","\u006E","\u006F",   // 112
+            "\u0070","\u0071","\u0072","\u0073","\u0074","\u0075","\u0076","\u0077","\u0078","\u0079","\u007A","\u007B","\u007C","\u007D","\u007E","",   // 128
+            "","","","","","","","","","","","","","","","",   // 144
+            "","","","","","","","","","","","","","","","",   // 160
+
+            "\u00A0","\u201D","\u00A2","\u00A3","\u00A4","\u201E","\u00A6","\u00A7","\u00D8","\u00A9","\u0156","\u00AB","\u00AC","\u00AD","\u00AE","\u00C6", // 176
+            "\u00B0","\u00B1","\u00B2","\u00B3","\u201C","\u00B5","\u00B6","\u00B7","\u00F8","\u00B9","\u0157","\u00BB","\u00BC","\u00BD","\u00BE","\u00E6", // 192
+
+            "\u0104","\u012E","\u0100","\u0106","\u00C4","\u00C5","\u0118","\u0112","\u010C","\u00C9","\u0179","\u0116","\u0122","\u0136","\u012A","\u013B", // 208
+            "\u0160","\u0143","\u0145","\u00D3","\u014C","\u00D5","\u00D6","\u00D7","\u0172","\u0141","\u015A","\u016A","\u00DC","\u017B","\u017D","\u00DF",
+
+            "\u0105","\u012F","\u0101","\u0107","\u00E4","\u00E5","\u0119","\u0113","\u010D","\u00E9","\u017A","\u0117","\u0123","\u0137","\u012B","\u013C",
+            "\u0161","\u0144","\u0146","\u00F3","\u014D","\u00F5","\u00F6","\u00F7","\u0173","\u0142","\u015B","\u016B","\u00FC","\u017C","\u017E","\u2019"
         };
 
         private static string ReadControlCode(byte b)
@@ -90,6 +113,18 @@ namespace MPEGTS
             return null; // not control code
         }
 
+        private static string GetManualEncodingString(string[] encoding, byte[] bytes, int index, int count)
+        {
+            var res = new StringBuilder();
+
+            for (var i=index; i<index+count;i++)
+            {
+                res.Append(encoding[bytes[i]]);
+            }
+
+            return res.ToString();
+        }
+
         public static string ReadString(byte[] bytes, int index, int count)
         {
             if (bytes == null ||
@@ -99,6 +134,10 @@ namespace MPEGTS
             {
                 return String.Empty;
             }
+
+            // Xamarin does not suport this encodings:
+            // iso-8859-10: "'iso-8859-10' is not a supported encoding name. For information on defining a custom encoding, see the documentation for the Encoding.RegisterProvider method.\nParameter name: name"
+            // iso-8859-13: {System.NotSupportedException: No data is available for encoding 28603. For information on defining a custom encoding, see the documentation for the Encoding.RegisterProvider method.  at ....
 
             var characterTableByte = bytes[index];
 
@@ -137,7 +176,7 @@ namespace MPEGTS
                         break;
                     case 6:
                         // ISO/IEC 8859-10
-                        txt = System.Text.Encoding.GetEncoding("iso-8859-10").GetString(bytes, index, count);
+                        txt = GetManualEncodingString(ISO_8859_10, bytes, index, count);
                         break;
                     case 7:
                         // ISO/IEC 8859-11
@@ -145,7 +184,7 @@ namespace MPEGTS
                         break;
                     case 9:
                         // ISO/IEC 8859-13
-                        txt = System.Text.Encoding.GetEncoding("iso-8859-13").GetString(bytes, index, count);
+                        txt = GetManualEncodingString(ISO_8859_13, bytes, index, count);
                         break;
                     case 0xB:
                         // ISO/IEC 8859-15

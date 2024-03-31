@@ -5,11 +5,11 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>.NET MPEG transport stream library</Title>
     <RepositoryUrl>https://github.com/petrj/NugetLibrary</RepositoryUrl>
-    <Description>.NET MPEG transport stream library</Description>	
+    <Description>.NET MPEG transport stream library</Description>
     <PackageProjectUrl>https://github.com/petrj/MPEGTS</PackageProjectUrl>
-    <AssemblyVersion>1.0.0.19</AssemblyVersion>
-    <FileVersion>1.0.0.19</FileVersion>
-    <PackageVersion>1.0.19</PackageVersion>
+    <AssemblyVersion>1.0.0.21</AssemblyVersion>
+    <FileVersion>1.0.0.21</FileVersion>
+    <PackageVersion>1.0.21</PackageVersion>
     <Authors>Petr Janousek</Authors>
   </PropertyGroup>
 
@@ -19,6 +19,10 @@
 
   <ItemGroup>
     <Folder Include="lib\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="LoggerService">

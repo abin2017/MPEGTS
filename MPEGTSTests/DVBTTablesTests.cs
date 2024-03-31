@@ -452,5 +452,29 @@ namespace Tests
             Assert.AreEqual(new DateTime(2023, 10, 15, 05, 25, 0), ev.StartTime);
             Assert.AreEqual(new DateTime(2023, 10, 15, 06, 20, 0), ev.FinishTime);
         }
+
+        /// <summary>
+        /// Polish EIT with ISO-8859-13 encoding
+        /// </summary>
+        [TestMethod]
+        public void TestEITPL2()
+        {
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}EIT.PL2.bin");
+
+            var packet = MPEGTransportStreamPacket.Parse(packetBytes);
+
+            var EIT = DVBTTable.CreateFromPackets<EITTable>(packet, 18);
+
+            Assert.IsNotNull(EIT);
+
+            Assert.AreEqual(1, EIT.EventItems.Count);
+
+            var ev = EIT.EventItems[0];
+
+            Assert.AreEqual("Francuskie śniadanie - Thierry Śmiałek sezon 1 odc. 8", ev.EventName);
+            Assert.AreEqual("", ev.Text);
+            Assert.AreEqual(new DateTime(2024, 3, 31, 11, 55, 0), ev.StartTime);
+            Assert.AreEqual(new DateTime(2024, 3, 31, 12, 20, 0), ev.FinishTime);
+        }
     }
 }

@@ -238,6 +238,13 @@ namespace MPEGTSAnalyzator
 
                     var eitPackets = MPEGTransportStreamPacket.GetFilteredPackets(packetsByPID[18], 18);
 
+                    /*
+                       //saving packets fo future analyzation/tests
+                    var hPackets = new List<MPEGTransportStreamPacket>();
+                    hPackets.AddRange(packetsByPID[18].GetRange(0, 100));
+                    MPEGTransportStreamPacket.SavePacketsToFile(hPackets, "c:\\temp\\EITPackests.bin");
+                    */
+
                     foreach (var kvp in eitPackets)
                     {
                         var eitTable = DVBTTable.CreateFromPackets<EITTable>(kvp.Value, 18);
