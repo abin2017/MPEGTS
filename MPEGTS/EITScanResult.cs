@@ -7,6 +7,7 @@ namespace MPEGTS
     public class EITScanResult
     {
         public bool OK { get; set; }
+        public bool NotSupportedEncodingFound { get; set; }
 
         /// <summary>
         /// MapPID -> current event

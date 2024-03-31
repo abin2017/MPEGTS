@@ -129,6 +129,14 @@ namespace MPEGTS
                         catch (Exception ex)
                         {
                             // Bad data EIT data
+
+                            if (ex is NotSupportedException)
+                            {
+                                if (ex.Message.StartsWith("No data is available for encoding "))
+                                {
+                                    res.NotSupportedEncodingFound = true;
+                                }
+                            }
                         }
                     }
 
@@ -153,6 +161,14 @@ namespace MPEGTS
             {
                 _log.Error(e);
                 res.OK = false;
+
+                if (e is NotSupportedException)
+                {
+                    if (e.Message.StartsWith("No data is available for encoding "))
+                    {
+                        res.NotSupportedEncodingFound = true;
+                    }
+                }
             }
 
             return res;
