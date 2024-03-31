@@ -227,6 +227,7 @@ namespace MPEGTSAnalyzator
                 }
             }
 
+
             if (includeEIT)
             {
                 if (packetsByPID.ContainsKey(18))

@@ -174,5 +174,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <TypeScriptCompile Include="TestData.PL\DVBT-MPEGTS-506MHz-2024-03-31-11-23-51.ts" />
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

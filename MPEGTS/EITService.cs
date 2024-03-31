@@ -16,6 +16,26 @@ namespace MPEGTS
             _log = loggingService;
         }
 
+        private int AddEventItem(Dictionary<int, List<EventItem>> scheduledEvents, EventItem item, int key)
+        {
+            if (!scheduledEvents.ContainsKey(key))
+            {
+                scheduledEvents[key] = new List<EventItem>();
+            }
+
+            foreach (var addedItem in scheduledEvents[key])
+            {
+                if (addedItem.EventId == item.EventId)
+                {
+                    return 0;
+                }
+            }
+
+            scheduledEvents[key].Add(item);
+
+            return 1;
+        }
+
         /// <summary>
         /// Scanning actual and scheduled events for actual TS
         /// </summary>
@@ -46,7 +66,7 @@ namespace MPEGTS
 
                     _log.Debug($"EIT packets count: {eitData.Count}");
 
-                   // var eventIDs = new Dictionary<int, Dictionary<int, EventItem>>(); // ServiceID -> (event id -> event item )
+                    // var eventIDs = new Dictionary<int, Dictionary<int, EventItem>>(); // ServiceID -> (event id -> event item )
 
                     var currentEventsCountFound = 0;
                     var scheduledEventsCountFound = 0;
@@ -72,6 +92,11 @@ namespace MPEGTS
 
                                         res.CurrentEvents[programNumberToMapPID[eit.ServiceId]] = item;
 
+                                        if (!programNumberToMapPID.ContainsValue(eit.ServiceId))
+                                        {
+                                            res.CurrentEvents[eit.ServiceId] = item;
+                                        }
+
                                         currentEventsCountFound++;
 
                                         break;
@@ -90,22 +115,14 @@ namespace MPEGTS
 
                                     var programMapPID = programNumberToMapPID[eit.ServiceId];
 
-                                    if (!res.ScheduledEvents.ContainsKey(programMapPID))
+                                    scheduledEventsCountFound += AddEventItem(res.ScheduledEvents, item, programMapPID);
+
+                                    // polish EPG has as key serviceId
+                                    if (!programNumberToMapPID.ContainsValue(eit.ServiceId))
                                     {
-                                        res.ScheduledEvents[programMapPID] = new List<EventItem>();
+                                        AddEventItem(res.ScheduledEvents, item, eit.ServiceId);
                                     }
 
-                                    foreach (var addedItem in res.ScheduledEvents[programMapPID])
-                                    {
-                                        if (addedItem.EventId == addedItem.EventId)
-                                        {
-                                            continue; // already added
-                                        }
-                                    }
-
-                                    res.ScheduledEvents[programMapPID].Add(item);
-
-                                    scheduledEventsCountFound++;
                                 }
                             }
                         }
