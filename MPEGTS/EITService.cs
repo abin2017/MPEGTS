@@ -37,10 +37,10 @@ namespace MPEGTS
         }
 
         /// <summary>
-        /// Scanning actual and scheduled events for actual TS
+        /// Scanning events for actual TS
         /// </summary>
         /// <param name="packets"></param>
-        public EITScanResult Scan(List<MPEGTransportStreamPacket> packets)
+        public EITScanResult Scan(List<MPEGTransportStreamPacket> packets, bool loadOutdatedCurrentEvents = false)
         {
             _log.Debug($"Scanning EIT from packets");
 
@@ -84,18 +84,17 @@ namespace MPEGTS
                             {
                                 foreach (var item in eit.EventItems)
                                 {
-                                    if (item.StartTime < DateTime.Now &&
-                                        item.FinishTime > DateTime.Now)
+                                    if (loadOutdatedCurrentEvents ||
+                                        (item.StartTime < DateTime.Now &&
+                                         item.FinishTime > DateTime.Now)
+                                        )
                                     {
-                                        // reading only the actual event
-                                        // there can be event that start in future!
-
                                         res.CurrentEvents[programNumberToMapPID[eit.ServiceId]] = item;
 
-                                        if (!programNumberToMapPID.ContainsValue(eit.ServiceId))
-                                        {
-                                            res.CurrentEvents[eit.ServiceId] = item;
-                                        }
+                                        //if (!programNumberToMapPID.ContainsValue(eit.ServiceId))
+                                        //{
+                                        //    res.CurrentEvents[eit.ServiceId] = item;
+                                        //}
 
                                         currentEventsCountFound++;
 
@@ -117,11 +116,11 @@ namespace MPEGTS
 
                                     scheduledEventsCountFound += AddEventItem(res.ScheduledEvents, item, programMapPID);
 
-                                    // polish EPG has as key serviceId
-                                    if (!programNumberToMapPID.ContainsValue(eit.ServiceId))
-                                    {
-                                        AddEventItem(res.ScheduledEvents, item, eit.ServiceId);
-                                    }
+                                    //// polish EPG has as key serviceId
+                                    //if (!programNumberToMapPID.ContainsValue(eit.ServiceId))
+                                    //{
+                                    //    AddEventItem(res.ScheduledEvents, item, eit.ServiceId);
+                                    //}
 
                                 }
                             }
