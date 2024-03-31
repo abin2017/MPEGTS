@@ -9,7 +9,7 @@
     <PackageProjectUrl>https://github.com/petrj/MPEGTS</PackageProjectUrl>
     <AssemblyVersion>1.0.0.19</AssemblyVersion>
     <FileVersion>1.0.0.19</FileVersion>
-    <PackageVersion>1.0.18</PackageVersion>
+    <PackageVersion>1.0.19</PackageVersion>
     <Authors>Petr Janousek</Authors>
   </PropertyGroup>
 
