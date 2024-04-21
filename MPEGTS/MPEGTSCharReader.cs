@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Reflection;
 using System.Text;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace MPEGTS
 {
@@ -135,10 +138,6 @@ namespace MPEGTS
                 return String.Empty;
             }
 
-            // Xamarin does not suport this encodings:
-            // iso-8859-10: "'iso-8859-10' is not a supported encoding name. For information on defining a custom encoding, see the documentation for the Encoding.RegisterProvider method.\nParameter name: name"
-            // iso-8859-13: {System.NotSupportedException: No data is available for encoding 28603. For information on defining a custom encoding, see the documentation for the Encoding.RegisterProvider method.  at ....
-
             var characterTableByte = bytes[index];
 
             if ((characterTableByte > 0) && (characterTableByte < 0x20))
@@ -149,72 +148,7 @@ namespace MPEGTS
                 index++;
                 count--;
 
-                string txt = null;
-
-                // [1] see Table A.3: Character coding table
-                switch (characterTableByte)
-                {
-                    case 1:
-                        // ISO 8859-5 Latin/Cyrillic alphabet - see table A.2
-                        txt = System.Text.Encoding.GetEncoding("iso-8859-5").GetString(bytes, index, count);
-                        break;
-                    case 2:
-                        // ISO 8859-6 Latin/Arabic alphabet - see table A.3
-                        txt = System.Text.Encoding.GetEncoding("iso-8859-6").GetString(bytes, index, count);
-                        break;
-                    case 3:
-                        // ISO 8859-7 Latin/Arabic alphabet - see table A.4
-                        txt = System.Text.Encoding.GetEncoding("iso-8859-7").GetString(bytes, index, count);
-                        break;
-                    case 4:
-                        // ISO 8859-8 Latin/Arabic alphabet - see table A.5
-                        txt = System.Text.Encoding.GetEncoding("iso-8859-8").GetString(bytes, index, count);
-                        break;
-                    case 5:
-                        // ISO 8859-9 Latin/Arabic alphabet - see table A.6
-                        txt = System.Text.Encoding.GetEncoding("iso-8859-9").GetString(bytes, index, count);
-                        break;
-                    case 6:
-                        // ISO/IEC 8859-10
-                        txt = GetManualEncodingString(ISO_8859_10, bytes, index, count);
-                        break;
-                    case 7:
-                        // ISO/IEC 8859-11
-                        txt = System.Text.Encoding.GetEncoding("iso-8859-11").GetString(bytes, index, count);
-                        break;
-                    case 9:
-                        // ISO/IEC 8859-13
-                        txt = GetManualEncodingString(ISO_8859_13, bytes, index, count);
-                        break;
-                    case 0xB:
-                        // ISO/IEC 8859-15
-                        txt = System.Text.Encoding.GetEncoding("iso-8859-15").GetString(bytes, index, count);
-                        break;
-                    case 0x11:
-                        // Unicode - ISO/IEC 10646 [52]
-                        txt = System.Text.Encoding.Unicode.GetString(bytes, index, count);
-                        break;
-                    case 0x15:
-                        // UTF - 8 encoding of ISO / IEC 10646[52] BMP
-                        txt = System.Text.Encoding.UTF8.GetString(bytes, index, count);
-                        break;
-
-                    case 0x08: // reserved for future use (see NOTE)
-                    case 0x0A: // ISO/IEC 8859-14 not supported in .NET!
-                    case 0x10: // dynamically selected part of ISO / IEC 8859
-                    case 0x12: // KS X 1001 - 2014[54] Korean character set
-                    case 0x13: // GB - 2312 - 1980[53] Simplified Chinese character set
-                    case 0x14: // Big5 subset of ISO/IEC 10646 [16] Traditional Chinese
-                    default:
-                        return string.Empty;
-                }
-
-                if (txt != null)
-                {
-                    return txt;
-                }
-
-                return String.Empty;
+                return GetTabledCodedString(bytes, characterTableByte, index, count);
             }
 
             // all subsequent bytes in the text item are coded using the default character coding table (Latin alphabet)
@@ -276,5 +210,151 @@ namespace MPEGTS
 
             return res.ToString();
         }
+
+        private static string GetTabledCodedString(byte[] bytes, byte characterTableByte, int index, int count)
+        {
+            // Xamarin does not suport this encodings:
+            // iso-8859-10: "'iso-8859-10' is not a supported encoding name. For information on defining a custom encoding, see the documentation for the Encoding.RegisterProvider method.\nParameter name: name"
+            // iso-8859-13: {System.NotSupportedException: No data is available for encoding 28603. For information on defining a custom encoding, see the documentation for the Encoding.RegisterProvider method.  at ....
+
+            var txt = String.Empty;
+
+            // [1] see Table A.3: Character coding table
+            switch (characterTableByte)
+            {
+                case 1:
+                    // ISO 8859-5 Latin/Cyrillic alphabet - see table A.2
+                    txt = System.Text.Encoding.GetEncoding("iso-8859-5").GetString(bytes, index, count);
+                    break;
+                case 2:
+                    // ISO 8859-6 Latin/Arabic alphabet - see table A.3
+                    txt = System.Text.Encoding.GetEncoding("iso-8859-6").GetString(bytes, index, count);
+                    break;
+                case 3:
+                    // ISO 8859-7 Latin/Arabic alphabet - see table A.4
+                    txt = System.Text.Encoding.GetEncoding("iso-8859-7").GetString(bytes, index, count);
+                    break;
+                case 4:
+                    // ISO 8859-8 Latin/Arabic alphabet - see table A.5
+                    txt = System.Text.Encoding.GetEncoding("iso-8859-8").GetString(bytes, index, count);
+                    break;
+                case 5:
+                    // ISO 8859-9 Latin/Arabic alphabet - see table A.6
+                    txt = System.Text.Encoding.GetEncoding("iso-8859-9").GetString(bytes, index, count);
+                    break;
+                case 6:
+                    // ISO/IEC 8859-10
+                    txt = GetManualEncodingString(ISO_8859_10, bytes, index, count);
+                    break;
+                case 7:
+                    // ISO/IEC 8859-11
+                    txt = System.Text.Encoding.GetEncoding("iso-8859-11").GetString(bytes, index, count);
+                    break;
+                case 9:
+                    // ISO/IEC 8859-13
+                    txt = GetManualEncodingString(ISO_8859_13, bytes, index, count);
+                    break;
+                case 0xB:
+                    // ISO/IEC 8859-15
+                    txt = System.Text.Encoding.GetEncoding("iso-8859-15").GetString(bytes, index, count);
+                    break;
+                case 0x11:
+                    // Unicode - ISO/IEC 10646 [52]
+                    txt = System.Text.Encoding.Unicode.GetString(bytes, index, count);
+                    break;
+                case 0x15:
+                    // UTF - 8 encoding of ISO / IEC 10646[52] BMP
+                    txt = System.Text.Encoding.UTF8.GetString(bytes, index, count);
+                    break;
+
+                case 0x10: // dynamically selected part of ISO / IEC 8859
+                    if (count>3)
+                    {
+                        var secondByte = bytes[index];
+                        if (secondByte == 0)
+                        {
+                            var thirdByte = bytes[index + 1];
+                            index += 2;
+                            count -= 2;
+                            switch (thirdByte)
+                            {
+                                case 1:
+                                    // ISO 8859-1 West European - see table A.4
+                                    txt = System.Text.Encoding.GetEncoding("iso-8859-1").GetString(bytes, index, count);
+                                    break;
+                                case 2:
+                                    // ISO 8859-2 East European - see table A.4
+                                    txt = System.Text.Encoding.GetEncoding("iso-8859-2").GetString(bytes, index, count);
+                                    break;
+                                case 3:
+                                    // ISO 8859-3 South European - see table A.4
+                                    txt = System.Text.Encoding.GetEncoding("iso-8859-3").GetString(bytes, index, count);
+                                    break;
+                                case 4:
+                                    // ISO 8859-4 North and North-East European - see table A.4
+                                    txt = System.Text.Encoding.GetEncoding("iso-8859-4").GetString(bytes, index, count);
+                                    break;
+                                case 5:
+                                    // ISO 8859-5 Latin/Cyrillic - see table A.4
+                                    txt = System.Text.Encoding.GetEncoding("iso-8859-5").GetString(bytes, index, count);
+                                    break;
+                                case 6:
+                                    // ISO 8859-5 Latin/Arabic - see table A.4
+                                    txt = System.Text.Encoding.GetEncoding("iso-8859-6").GetString(bytes, index, count);
+                                    break;
+                                case 7:
+                                    // ISO 8859-7 Latin/Greek - see table A.4
+                                    txt = System.Text.Encoding.GetEncoding("iso-8859-7").GetString(bytes, index, count);
+                                    break;
+                                case 8:
+                                    // ISO 8859-8 Latin/Hebrew - see table A.4
+                                    txt = System.Text.Encoding.GetEncoding("iso-8859-8").GetString(bytes, index, count);
+                                    break;
+                                case 9:
+                                    // ISO 8859-9 West European & Turkish - see table A.4
+                                    txt = System.Text.Encoding.GetEncoding("iso-8859-9").GetString(bytes, index, count);
+                                    break;
+                                case 10:
+                                    // ISO 8859-10 North European - see table A.4
+                                    txt = GetManualEncodingString(ISO_8859_10, bytes, index, count);
+                                    break;
+                                case 11:
+                                    // ISO 8859-11 Thai - see table A.4
+                                    txt = System.Text.Encoding.GetEncoding("iso-8859-11").GetString(bytes, index, count);
+                                    break;
+                                case 13:
+                                    // ISO 8859-13 Baltic - see table A.4
+                                    txt = GetManualEncodingString(ISO_8859_13, bytes, index, count);
+                                    break;
+                                case 14:
+                                    // ISO 8859-14 Celtic - see table A.4
+                                    txt = System.Text.Encoding.GetEncoding("iso-8859-14").GetString(bytes, index, count);
+                                    break;
+                                case 15:
+                                    // ISO 8859-5 West European - see table A.4
+                                    txt = System.Text.Encoding.GetEncoding("iso-8859-15").GetString(bytes, index, count);
+                                    break;
+                            }
+                        }
+                    }
+                    break;
+
+                case 0x08: // reserved for future use (see NOTE)
+                case 0x0A: // ISO/IEC 8859-14 not supported in .NET!
+                case 0x12: // KS X 1001 - 2014[54] Korean character set
+                case 0x13: // GB - 2312 - 1980[53] Simplified Chinese character set
+                case 0x14: // Big5 subset of ISO/IEC 10646 [16] Traditional Chinese
+                default:
+                    return string.Empty;
+            }
+
+            if (txt != null)
+            {
+                return txt;
+            }
+
+            return String.Empty;
+        }
     }
 }
+

@@ -483,6 +483,8 @@ namespace Tests
         [TestMethod]
         public void TestEITMagyar()
         {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
             var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}EIT.Magyar.bin");
 
             var packet = MPEGTransportStreamPacket.Parse(packetBytes);
@@ -498,8 +500,7 @@ namespace Tests
             Assert.AreEqual(new DateTime(2024, 4, 20, 14, 00, 0), ev.StartTime);
             Assert.AreEqual(new DateTime(2024, 4, 20, 14, 03, 0), ev.FinishTime);
 
-            Assert.AreNotEqual(String.Empty, ev.EventName);
-            //Assert.AreEqual("", ev.Text);
+            Assert.AreEqual("Petőfi Hírek", ev.EventName);
         }
     }
 }
