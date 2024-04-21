@@ -476,5 +476,30 @@ namespace Tests
             Assert.AreEqual(new DateTime(2024, 3, 31, 11, 55, 0), ev.StartTime);
             Assert.AreEqual(new DateTime(2024, 3, 31, 12, 20, 0), ev.FinishTime);
         }
+
+        /// <summary>
+        /// Magyar EIT with dynamically selected part of ISO/IEC 8859
+        /// </summary>
+        [TestMethod]
+        public void TestEITMagyar()
+        {
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}EIT.Magyar.bin");
+
+            var packet = MPEGTransportStreamPacket.Parse(packetBytes);
+
+            var EIT = DVBTTable.CreateFromPackets<EITTable>(packet, 18);
+
+            Assert.IsNotNull(EIT);
+
+            Assert.AreEqual(3, EIT.EventItems.Count);
+
+            var ev = EIT.EventItems[0];
+
+            Assert.AreEqual(new DateTime(2024, 4, 20, 14, 00, 0), ev.StartTime);
+            Assert.AreEqual(new DateTime(2024, 4, 20, 14, 03, 0), ev.FinishTime);
+
+            Assert.AreNotEqual(String.Empty, ev.EventName);
+            //Assert.AreEqual("", ev.Text);
+        }
     }
 }
