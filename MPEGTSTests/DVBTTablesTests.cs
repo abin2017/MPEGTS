@@ -489,18 +489,21 @@ namespace Tests
 
             var packet = MPEGTransportStreamPacket.Parse(packetBytes);
 
-            var EIT = DVBTTable.CreateFromPackets<EITTable>(packet, 18);
+            var EITs = DVBTTable.CreateAllFromPackets<EITTable>(packet, 18);
 
-            Assert.IsNotNull(EIT);
+            Assert.IsNotNull(EITs);
 
-            Assert.AreEqual(3, EIT.EventItems.Count);
+            Assert.AreEqual(15, EITs.Count);
 
-            var ev = EIT.EventItems[0];
+            Assert.AreEqual(1, EITs[11].EventItems.Count);
 
-            Assert.AreEqual(new DateTime(2024, 4, 20, 14, 00, 0), ev.StartTime);
-            Assert.AreEqual(new DateTime(2024, 4, 20, 14, 03, 0), ev.FinishTime);
+            var ev = EITs[11].EventItems[0];
 
-            Assert.AreEqual("Petőfi Hírek", ev.EventName);
+            Assert.AreEqual(new DateTime(2024, 4, 19, 9, 00, 0), ev.StartTime);
+            Assert.AreEqual(new DateTime(2024, 4, 19, 9, 30, 0), ev.FinishTime);
+
+            Assert.AreEqual("Élő népzene", ev.EventName);
+            Assert.AreEqual("(magyar zenés műsor, 2007) - Üsztürü zenekar - Népzene és néptánc a Duna Televízió műsorán. rendező:  Sztanó Hédi, Nagy Anikó Mária", ev.Text);
         }
     }
 }
