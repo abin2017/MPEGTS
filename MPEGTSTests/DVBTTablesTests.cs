@@ -481,7 +481,7 @@ namespace Tests
         /// Magyar EIT with dynamically selected part of ISO/IEC 8859
         /// </summary>
         [TestMethod]
-        public void TestEITMagyar()
+        public void TestEITHungary()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
