@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="LoggerService" Version="1.0.4" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
     <PackageReference Include="MSTest.TestAdapter" Version="3.2.2" />
     <PackageReference Include="MSTest.TestFramework" Version="3.2.2" />
@@ -33,7 +34,7 @@
     <None Update="TestData\EIT.IT2.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TestData\EIT.Magyar.bin">
+    <None Update="TestData\EIT.Hungary.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="TestData\EIT.PL.bin">
@@ -47,6 +48,9 @@
     </None>
     <None Update="TestData\EIT3.bin">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\EITScan.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="TestData\NIT.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

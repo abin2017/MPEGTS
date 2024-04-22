@@ -1,3 +1,4 @@
+using LoggerService;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MPEGTS;
 using System;
@@ -485,7 +486,7 @@ namespace Tests
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}EIT.Magyar.bin");
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}EIT.Hungary.bin");
 
             var packet = MPEGTransportStreamPacket.Parse(packetBytes);
 
@@ -504,6 +505,29 @@ namespace Tests
 
             Assert.AreEqual("Élő népzene", ev.EventName);
             Assert.AreEqual("(magyar zenés műsor, 2007) - Üsztürü zenekar - Népzene és néptánc a Duna Televízió műsorán. rendező:  Sztanó Hédi, Nagy Anikó Mária", ev.Text);
+        }
+
+        /// <summary>
+        /// Test EITScan method
+        /// </summary>
+        [TestMethod]
+        public void TestEITScan()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}EITScan.bin");
+
+            var packets = MPEGTransportStreamPacket.Parse(packetBytes);
+
+            var eitService = new EITService(new DummyLoggingService());
+            var res = eitService.Scan(packets);
+
+            Assert.IsNotNull(res);
+
+            Assert.IsNotNull(res.CurrentEvents);
+            Assert.IsNotNull(res.ScheduledEvents);
+            Assert.AreEqual(0, res.CurrentEvents.Count);
+            Assert.AreEqual(8, res.ScheduledEvents.Count);
         }
     }
 }

@@ -91,11 +91,6 @@ namespace MPEGTS
                                     {
                                         res.CurrentEvents[programNumberToMapPID[eit.ServiceId]] = item;
 
-                                        //if (!programNumberToMapPID.ContainsValue(eit.ServiceId))
-                                        //{
-                                        //    res.CurrentEvents[eit.ServiceId] = item;
-                                        //}
-
                                         currentEventsCountFound++;
 
                                         break;
@@ -115,14 +110,10 @@ namespace MPEGTS
                                     var programMapPID = programNumberToMapPID[eit.ServiceId];
 
                                     scheduledEventsCountFound += AddEventItem(res.ScheduledEvents, item, programMapPID);
-
-                                    //// polish EPG has as key serviceId
-                                    //if (!programNumberToMapPID.ContainsValue(eit.ServiceId))
-                                    //{
-                                    //    AddEventItem(res.ScheduledEvents, item, eit.ServiceId);
-                                    //}
-
                                 }
+                            } else
+                            {
+
                             }
                         }
                         catch (Exception ex)
