@@ -299,7 +299,7 @@ namespace MPEGTS
                                     txt = System.Text.Encoding.GetEncoding("iso-8859-5").GetString(bytes, index, count);
                                     break;
                                 case 6:
-                                    // ISO 8859-5 Latin/Arabic - see table A.4
+                                    // ISO 8859-6 Latin/Arabic - see table A.4
                                     txt = System.Text.Encoding.GetEncoding("iso-8859-6").GetString(bytes, index, count);
                                     break;
                                 case 7:
@@ -331,7 +331,7 @@ namespace MPEGTS
                                     txt = System.Text.Encoding.GetEncoding("iso-8859-14").GetString(bytes, index, count);
                                     break;
                                 case 15:
-                                    // ISO 8859-5 West European - see table A.4
+                                    // ISO 8859-15 West European - see table A.4
                                     txt = System.Text.Encoding.GetEncoding("iso-8859-15").GetString(bytes, index, count);
                                     break;
                             }
