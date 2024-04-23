@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Drawing;
 using System.Reflection;
 using System.Text;
@@ -73,6 +74,29 @@ namespace MPEGTS
 
             "\u0105","\u012F","\u0101","\u0107","\u00E4","\u00E5","\u0119","\u0113","\u010D","\u00E9","\u017A","\u0117","\u0123","\u0137","\u012B","\u013C",
             "\u0161","\u0144","\u0146","\u00F3","\u014D","\u00F5","\u00F6","\u00F7","\u0173","\u0142","\u015B","\u016B","\u00FC","\u017C","\u017E","\u2019"
+        };
+
+        public static string[] ISO_8859_14 = new string[256]
+        {
+            "","","","","","","","","","","","","","","","",   //  0 .. 15
+            "","","","","","","","","","","","","","","","",   // 16 .. 31
+            "\u0020","\u0021","\u0022","\u0023","\u0024","\u0025","\u0026","\u0027","\u0028","\u0029","\u002A","\u002B","\u002C","\u002D","\u002E","\u002F",   // 32
+            "\u0030","\u0031","\u0032","\u0033","\u0034","\u0035","\u0036","\u0037","\u0038","\u0039","\u003A","\u003B","\u003C","\u003D","\u003E","\u003F",   // 64
+            "\u0040","\u0041","\u0042","\u0043","\u0044","\u0045","\u0046","\u0047","\u0048","\u0049","\u004A","\u004B","\u004C","\u004D","\u004E","\u004F",   // 80
+            "\u0050","\u0051","\u0052","\u0053","\u0054","\u0055","\u0056","\u0057","\u0058","\u0059","\u005A","\u005B","\u005C","\u005D","\u005E","\u005F",   // 96
+            "\u0060","\u0061","\u0062","\u0063","\u0064","\u0065","\u0066","\u0067","\u0068","\u0069","\u006A","\u006B","\u006C","\u006D","\u006E","\u006F",   // 112
+            "\u0070","\u0071","\u0072","\u0073","\u0074","\u0075","\u0076","\u0077","\u0078","\u0079","\u007A","\u007B","\u007C","\u007D","\u007E","",   // 128
+            "","","","","","","","","","","","","","","","",   // 144
+            "","","","","","","","","","","","","","","","",   // 160
+
+            "\u00A0","\u1E02","\u1E03","\u00A3","\u010A","\u010B","\u1E0A","\u00A7","\u1E80","\u00A9","\u1E82","\u1E0B","\u1EF2","\u00AD","\u00AE","\u0178",   // 176
+            "\u1E1E","\u1E1F","\u0120","\u0121","\u1E40","\u1E41","\u00B6","\u1E56","\u1E81","\u1E57","\u1E83","\u1E60","\u1EF3","\u1E84","\u1E85","\u1E61",   // 192
+
+            "\u00C0","\u00C1","\u00C2","\u00C3","\u00C4","\u00C5","\u00C6","\u00C7","\u00C8","\u00C9","\u00CA","\u00CB","\u00CC","\u00CD","\u00CE","\u00CF",   // 208
+            "\u0174","\u00D1","\u00D2","\u00D3","\u00D4","\u00D5","\u00D6","\u1E6A","\u00D8","\u00D9","\u00DA","\u00DB","\u00DC","\u00DD","\u0176","\u00DF",   // 224
+
+            "\u00E0","\u00E1","\u00E2","\u00E3","\u00E4","\u00E5","\u00E6","\u00E7","\u00E8","\u00E9","\u00EA","\u00EB","\u00EC","\u00ED","\u00EE","\u00EF",   // 240
+            "\u0175","\u00F1","\u00F2","\u00F3","\u00F4","\u00F5","\u00F6","\u1E6B","\u00F8","\u00F9","\u00FA","\u00FB","\u00FC","\u00FD","\u0177","\u00FF"    // 256
         };
 
         private static string ReadControlCode(byte b)
@@ -216,6 +240,7 @@ namespace MPEGTS
             // Xamarin does not suport this encodings:
             // iso-8859-10: "'iso-8859-10' is not a supported encoding name. For information on defining a custom encoding, see the documentation for the Encoding.RegisterProvider method.\nParameter name: name"
             // iso-8859-13: {System.NotSupportedException: No data is available for encoding 28603. For information on defining a custom encoding, see the documentation for the Encoding.RegisterProvider method.  at ....
+            // iso-8859-14: {{System.ArgumentException: 'iso-8859-14' is not a supported encoding name. For information on defining a custom encoding, see the documentation for the Encoding.RegisterProvider method....
 
             var txt = String.Empty;
 
@@ -254,7 +279,11 @@ namespace MPEGTS
                     // ISO/IEC 8859-13
                     txt = GetManualEncodingString(ISO_8859_13, bytes, index, count);
                     break;
-                case 0xB:
+                case 0x0A:
+                    // ISO/IEC 8859-14
+                    txt = GetManualEncodingString(ISO_8859_14, bytes, index, count);
+                    break;
+                case 0x0B:
                     // ISO/IEC 8859-15
                     txt = System.Text.Encoding.GetEncoding("iso-8859-15").GetString(bytes, index, count);
                     break;
@@ -314,23 +343,23 @@ namespace MPEGTS
                                     // ISO 8859-9 West European & Turkish - see table A.4
                                     txt = System.Text.Encoding.GetEncoding("iso-8859-9").GetString(bytes, index, count);
                                     break;
-                                case 10:
+                                case 0x0A:
                                     // ISO 8859-10 North European - see table A.4
                                     txt = GetManualEncodingString(ISO_8859_10, bytes, index, count);
                                     break;
-                                case 11:
+                                case 0x0B:
                                     // ISO 8859-11 Thai - see table A.4
                                     txt = System.Text.Encoding.GetEncoding("iso-8859-11").GetString(bytes, index, count);
                                     break;
-                                case 13:
+                                case 0x0D:
                                     // ISO 8859-13 Baltic - see table A.4
                                     txt = GetManualEncodingString(ISO_8859_13, bytes, index, count);
                                     break;
-                                case 14:
+                                case 0x0E:
                                     // ISO 8859-14 Celtic - see table A.4
-                                    txt = System.Text.Encoding.GetEncoding("iso-8859-14").GetString(bytes, index, count);
+                                    txt = GetManualEncodingString(ISO_8859_14, bytes, index, count);
                                     break;
-                                case 15:
+                                case 0x0F:
                                     // ISO 8859-15 West European - see table A.4
                                     txt = System.Text.Encoding.GetEncoding("iso-8859-15").GetString(bytes, index, count);
                                     break;
@@ -340,7 +369,6 @@ namespace MPEGTS
                     break;
 
                 case 0x08: // reserved for future use (see NOTE)
-                case 0x0A: // ISO/IEC 8859-14 not supported in .NET!
                 case 0x12: // KS X 1001 - 2014[54] Korean character set
                 case 0x13: // GB - 2312 - 1980[53] Simplified Chinese character set
                 case 0x14: // Big5 subset of ISO/IEC 10646 [16] Traditional Chinese
