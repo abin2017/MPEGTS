@@ -238,8 +238,7 @@ namespace MPEGTSAnalyzator
 
                     var eitPackets = MPEGTransportStreamPacket.GetFilteredPackets(packetsByPID[18], 18);
 
-
-
+                    /*
                     //saving packets fo future analyzation/tests
 
                     var psiPackets = MPEGTransportStreamPacket.GetFilteredPackets(packetsByPID[0], 0);
@@ -247,8 +246,7 @@ namespace MPEGTSAnalyzator
                     hPackets.AddRange(packetsByPID[18].GetRange(0, 100));
                     hPackets.AddRange(psiPackets[0].GetRange(0, 1));
                     MPEGTransportStreamPacket.SavePacketsToFile(hPackets, "c:\\temp\\EITPackests.bin");
-
-
+                    */
 
                     foreach (var kvp in eitPackets)
                     {

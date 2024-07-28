@@ -481,5 +481,83 @@ namespace Tests
             Assert.AreEqual("Najlepšie ľudovky a dychovky", ev.EventName);
             Assert.AreEqual("Deväťdesiatky (Najúspešnejsí a najsledovanejší kriminálny seriál Českej televízie, ktorý dejovo o dvadsať rokov predchádza Prípady 1. oddelenia.Je všeobecne známe, že situácia po nežnej revolúcii priniesla v deväťdesiatych rokoch strmý nárast kriminality. Kriminalita v tej dobe  bola nesmierne násilná a krutá. Polícia na tieto podmienky nebola vôbec pripravená ani vybavená a jej úloha bola nesmierne náročná. Seriál je dramatizáciou skutočných kriminálnych prípadov, ktoré vyšetrovalo 1. oddelenie pražskej kriminálnej polície a ktoré sa stali po rozdelení Československa, v rozmedzí rokov 1993 až 1995. Osobné linky protagonistov sa nezakladajú na realite, ale skutková podstata činov a spôsob ich odhalenia ostávajú autentické. Na tvorbe scenára sa podieľali tvorcovia Josef Mareš a Matěj Podzimek. Josef Mareš je bývalý vedúci 1. oddelenia a na niektorých prípadoch osobne pracoval. Na 1. odd nastupuje mladý, ešte neskúsený detektív Tomáš Kozák. Už ostrieľaný ?operatívec Václav Plíšek, nie je z nováčika nadšený, avšak na riešenie takýchto  malicherností nebude čas, nakoľko obaja budú spoločne čeliť bezprecedentnému návalu vrážd. Česká republika 2022)", EITs[7].EventItems[1].TextValue);
         }
+
+        [TestMethod]
+        public void TestEITFrance1()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}EIT{Path.DirectorySeparatorChar}France{Path.DirectorySeparatorChar}EIT.FR.1.bin");
+
+            var packet = MPEGTransportStreamPacket.Parse(packetBytes);
+
+            var EITs = DVBTTable.CreateAllFromPackets<EITTable>(packet, 18);
+
+            Assert.IsNotNull(EITs);
+
+            Assert.AreEqual(58, EITs.Count);
+
+            Assert.AreEqual(1, EITs[0].EventItems.Count);
+
+            var ev = EITs[0].EventItems[0];
+
+            Assert.AreEqual(new DateTime(2024, 7, 25, 18, 53, 07), ev.StartTime);
+            Assert.AreEqual(new DateTime(2024, 7, 25, 19, 19, 11), ev.FinishTime);
+
+            Assert.AreEqual("STORAGE WARS : ENCHERES SURPRISES", ev.EventName);
+            Assert.AreEqual("STORAGE WARS : ENCHERES SURPRISES (Les filles réservent une surprise à Emily sur le thème des jeunes mariés. René fait tomber un énorme casier, tandis que Darrell teste ses connaissances en matière de bicyclette... et gagne.)", ev.TextValue);
+        }
+
+        [TestMethod]
+        public void TestEITFrance2()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}EIT{Path.DirectorySeparatorChar}France{Path.DirectorySeparatorChar}EIT.FR.2.bin");
+
+            var packet = MPEGTransportStreamPacket.Parse(packetBytes);
+
+            var EITs = DVBTTable.CreateAllFromPackets<EITTable>(packet, 18);
+
+            Assert.IsNotNull(EITs);
+
+            Assert.AreEqual(19, EITs.Count);
+
+            Assert.AreEqual(1, EITs[0].EventItems.Count);
+
+            var ev = EITs[0].EventItems[0];
+
+            Assert.AreEqual(new DateTime(2024, 7, 25, 19, 30, 00), ev.StartTime);
+            Assert.AreEqual(new DateTime(2024, 7, 25, 19, 32, 00), ev.FinishTime);
+
+            Assert.AreEqual("Pourvu que ça dure", ev.EventName);
+            Assert.AreEqual("Ce magazine de 26 minutes s'efforce de faire comprendre en quoi le monde économique ne sera plus tout-à-fait le même après l'impact historique du coronavirus. Le critère de durabilité est en effet désormais un facteur clé de...", ev.Text);
+        }
+
+        [TestMethod]
+        public void TestEITFrance3()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}EIT{Path.DirectorySeparatorChar}France{Path.DirectorySeparatorChar}EIT.FR.3.bin");
+
+            var packet = MPEGTransportStreamPacket.Parse(packetBytes);
+
+            var EITs = DVBTTable.CreateAllFromPackets<EITTable>(packet, 18);
+
+            Assert.IsNotNull(EITs);
+
+            Assert.AreEqual(28, EITs.Count);
+
+            Assert.AreEqual(1, EITs[0].EventItems.Count);
+
+            var ev = EITs[0].EventItems[0];
+
+            Assert.AreEqual(new DateTime(2024, 7, 25, 18, 12, 04), ev.StartTime);
+            Assert.AreEqual(new DateTime(2024, 7, 25, 18, 59, 37), ev.FinishTime);
+
+            Assert.AreEqual("Invitation au voyage - Le Sud de Nina Simone / Chypre / Nice", ev.EventName);
+            Assert.AreEqual("Magazine (France, 2023, 45mn) Linda Lorin nous emmène à la découverte de notre patrimoine artistique, culturel et naturel. Le vieux Sud en noir et blanc de Nina Simone - Chypre, petite île aux identités plurielles - En Slovénie, le gâteau à la crème de Petra - À Nice, un évêque vole au secours des juifs.\u008a\u008aAUDIO 1 : FRANÇAIS / AUDIO 2 : ALLEMAND\u008aSous-titres pour sourds et malentendants disponibles pour ce programme", ev.Text);
+        }
     }
 }
