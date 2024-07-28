@@ -52,6 +52,9 @@
     <None Update="TestData\EITScan.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="TestData\EIT\Austria\EIT.AU.2.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="TestData\EIT\Austria\EIT.AU.bin">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

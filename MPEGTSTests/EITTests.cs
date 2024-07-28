@@ -370,5 +370,35 @@ namespace Tests
             Assert.AreEqual("Unser Österreich (Seenland Österreich - Neusiedler See und SeewinkelDer Neusiedler See ist einer der wenigen Steppenseen Europas, der größte See Österreichs und in mehrfacher Hinsicht ungewöhnlich: er ist im Schnitt nur einen Meter tief, wird vor allem aus Niederschlägen gespeist und hat nur einen einzigen, künstlich angelegten Abfluss.\u008aDer liebevoll als \"Meer der Wiener\" bezeichnete See, erstreckt sich von den Hängen des Leithagebirges, den Klippen eines urzeitlichen Meers, bis in die Weite der Puszta. Die Region beheimatet eine einzigartige Flora und Fauna im und rund um den Steppensee und bietet ein einfaches, aber genussreiches Leben.\u008aRosa Maria Plattner hat sich auf eine filmische Erkundungstour begeben und unkonventionelle Menschen, die hier ihr Leben bestreiten, besucht. So auch einen Biobauern und Paradeiser-Pionier, der vor der Herausforderung steht \"Wie lassen sich Tomaten züchten, ohne zu gießen?\", einen Duftbauern, der den ehemaligen elterlichen Schweinestall in eine Duftoase umgewandelt hat, oder auch Josef Haubenwallner, der ein privates Museumsdorf aus traditionellen Häusern des Heidebodens aufgebaut hat, und viele der Bauwerke so vor dem Verfall gerettet hat.)", EITs[19].EventItems[0].TextValue);
 
         }
+
+        /// <summary>
+        /// Austria EIT test 2
+        /// </summary>
+        [TestMethod]
+        public void TestEITAustria2()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}EIT{Path.DirectorySeparatorChar}Austria{Path.DirectorySeparatorChar}EIT.AU.2.bin");
+
+            var packet = MPEGTransportStreamPacket.Parse(packetBytes);
+
+            var EITs = DVBTTable.CreateAllFromPackets<EITTable>(packet, 18);
+
+            Assert.IsNotNull(EITs);
+
+            Assert.AreEqual(23, EITs.Count);
+
+            Assert.AreEqual(0, EITs[3].EventItems.Count);
+
+            Assert.AreEqual(3, EITs[7].EventItems.Count);
+
+            var ev = EITs[7].EventItems[2];
+
+            Assert.AreEqual(new DateTime(2024, 7, 29, 16, 00, 0), ev.StartTime);
+            Assert.AreEqual(new DateTime(2024, 7, 29, 17, 00, 0), ev.FinishTime);
+
+            Assert.AreEqual("Das Duell - Zwischen Tüll und Tränen (Manuela Kriewen vs. Jana SchmitterZwei Expert:innen können den Traum einer Braut vom perfekten Hochzeitskleid erfüllen. Entscheidet sich die Braut für eines der Kleider, kürt sie damit auch den Gewinner:in des Duells. Heute im Duell: Manuela Kriewen vs. Jana Schmitter)", EITs[7].EventItems[2].TextValue);
+        }
     }
 }
