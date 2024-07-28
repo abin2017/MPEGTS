@@ -400,5 +400,86 @@ namespace Tests
 
             Assert.AreEqual("Das Duell - Zwischen Tüll und Tränen (Manuela Kriewen vs. Jana SchmitterZwei Expert:innen können den Traum einer Braut vom perfekten Hochzeitskleid erfüllen. Entscheidet sich die Braut für eines der Kleider, kürt sie damit auch den Gewinner:in des Duells. Heute im Duell: Manuela Kriewen vs. Jana Schmitter)", EITs[7].EventItems[2].TextValue);
         }
+
+        [TestMethod]
+        public void TestEITSlovakia1()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}EIT{Path.DirectorySeparatorChar}Slovakia{Path.DirectorySeparatorChar}EIT.SK.1.bin");
+
+            var packet = MPEGTransportStreamPacket.Parse(packetBytes);
+
+            var EITs = DVBTTable.CreateAllFromPackets<EITTable>(packet, 18);
+
+            Assert.IsNotNull(EITs);
+
+            Assert.AreEqual(16, EITs.Count);
+
+            Assert.AreEqual(12, EITs[0].EventItems.Count);
+
+            var ev = EITs[0].EventItems[0];
+
+            Assert.AreEqual(new DateTime(2024, 7, 27, 14, 15, 0), ev.StartTime);
+            Assert.AreEqual(new DateTime(2024, 7, 27, 14, 25, 0), ev.FinishTime);
+
+            Assert.AreEqual("Fíha tralala (10)", ev.EventName);
+
+            Assert.AreEqual("Naše prasiatko (43)", EITs[0].EventItems[1].TextValue);
+            Assert.AreEqual("MalinyJamológia 2 (1) (Lucka Siposová a medveď)", EITs[0].EventItems[4].TextValue);
+        }
+
+        [TestMethod]
+        public void TestEITSlovakia2()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}EIT{Path.DirectorySeparatorChar}Slovakia{Path.DirectorySeparatorChar}EIT.SK.2.bin");
+
+            var packet = MPEGTransportStreamPacket.Parse(packetBytes);
+
+            var EITs = DVBTTable.CreateAllFromPackets<EITTable>(packet, 18);
+
+            Assert.IsNotNull(EITs);
+
+            Assert.AreEqual(13, EITs.Count);
+
+            Assert.AreEqual(13, EITs[2].EventItems.Count);
+
+            var ev = EITs[2].EventItems[10];
+
+            Assert.AreEqual(new DateTime(2024, 7, 28, 13, 20, 0), ev.StartTime);
+            Assert.AreEqual(new DateTime(2024, 7, 28, 13, 35, 0), ev.FinishTime);
+
+            Assert.AreEqual("Hanička a Murko pre najmenších (5)", ev.EventName);
+            Assert.AreEqual("Hanička a Murko pre najmenších (5) (Hasiči)", ev.TextValue);
+        }
+
+
+        [TestMethod]
+        public void TestEITSlovakia3()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}EIT{Path.DirectorySeparatorChar}Slovakia{Path.DirectorySeparatorChar}EIT.SK.3.bin");
+
+            var packet = MPEGTransportStreamPacket.Parse(packetBytes);
+
+            var EITs = DVBTTable.CreateAllFromPackets<EITTable>(packet, 18);
+
+            Assert.IsNotNull(EITs);
+
+            Assert.AreEqual(26, EITs.Count);
+
+            Assert.AreEqual(2, EITs[5].EventItems.Count);
+
+            var ev = EITs[5].EventItems[0];
+
+            Assert.AreEqual(new DateTime(2024, 7, 21, 05, 00, 0), ev.StartTime);
+            Assert.AreEqual(new DateTime(2024, 7, 21, 06, 00, 0), ev.FinishTime);
+
+            Assert.AreEqual("Najlepšie ľudovky a dychovky", ev.EventName);
+            Assert.AreEqual("Deväťdesiatky (Najúspešnejsí a najsledovanejší kriminálny seriál Českej televízie, ktorý dejovo o dvadsať rokov predchádza Prípady 1. oddelenia.Je všeobecne známe, že situácia po nežnej revolúcii priniesla v deväťdesiatych rokoch strmý nárast kriminality. Kriminalita v tej dobe  bola nesmierne násilná a krutá. Polícia na tieto podmienky nebola vôbec pripravená ani vybavená a jej úloha bola nesmierne náročná. Seriál je dramatizáciou skutočných kriminálnych prípadov, ktoré vyšetrovalo 1. oddelenie pražskej kriminálnej polície a ktoré sa stali po rozdelení Československa, v rozmedzí rokov 1993 až 1995. Osobné linky protagonistov sa nezakladajú na realite, ale skutková podstata činov a spôsob ich odhalenia ostávajú autentické. Na tvorbe scenára sa podieľali tvorcovia Josef Mareš a Matěj Podzimek. Josef Mareš je bývalý vedúci 1. oddelenia a na niektorých prípadoch osobne pracoval. Na 1. odd nastupuje mladý, ešte neskúsený detektív Tomáš Kozák. Už ostrieľaný ?operatívec Václav Plíšek, nie je z nováčika nadšený, avšak na riešenie takýchto  malicherností nebude čas, nakoľko obaja budú spoločne čeliť bezprecedentnému návalu vrážd. Česká republika 2022)", EITs[7].EventItems[1].TextValue);
+        }
     }
 }
