@@ -175,6 +175,13 @@ namespace MPEGTSAnalyzator
                         if (pmtTable != null)
                         {
                             pmtTable.WriteToConsole();
+
+
+                            //saving packets fo future analyzation/tests
+
+                            var PMTPackets = packetsByPID[kvp.Value];
+                            MPEGTransportStreamPacket.SavePacketsToFile(PMTPackets, $"c:\\temp\\pmtPackests-{kvp.Value}.bin");
+
                         }
                     }
 
