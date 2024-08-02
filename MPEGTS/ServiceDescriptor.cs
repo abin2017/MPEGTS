@@ -14,15 +14,19 @@ namespace MPEGTS
         public string ProviderName { get; set; }
         public string ServiceName { get; set; }
 
+        public bool Free { get; set; }
+
         public int ProgramNumber { get; set; } = -1;
 
         public ServiceDescriptor()
         {
         }
 
-        public ServiceDescriptor(byte[] bytes, int programNumber, int networkId)
+        public ServiceDescriptor(byte[] bytes, int programNumber, int networkId, bool free)
         {
             ProgramNumber = programNumber;
+            Free = free;
+
             var pos = 0;
 
             Tag =   bytes[pos + 0];

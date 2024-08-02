@@ -12,30 +12,12 @@ namespace MPEGTS
 
         public List<ProgramAssociation> ProgramAssociations { get; set; } = new List<ProgramAssociation>();
 
-        private void ParsePAT(byte[] bytes)
-        {
-            int pos = 2;
-            while (pos < bytes.Length)
-            {
-                var programNum = Convert.ToInt32(((bytes[pos + 0]) << 8) + (bytes[pos + 1]));
-                var programPID = Convert.ToInt32(((bytes[pos + 2] & 31) << 8) + (bytes[pos + 3]));
-
-                ProgramAssociations.Add(new ProgramAssociation()
-                {
-                    ProgramNumber = programNum,
-                    ProgramMapPID = programPID
-                });
-
-                pos += 4;
-            }
-        }
-
         public override void Parse(List<byte> bytes)
         {
             if (bytes == null || bytes.Count < 5)
                 return;
 
-            MPEGTransportStreamPacket.WriteByteArrayToConsole(bytes.ToArray());
+            //MPEGTransportStreamPacket.WriteByteArrayToConsole(bytes.ToArray());
 
             var pointerField = bytes[0];
             var pos = 1;
@@ -48,39 +30,51 @@ namespace MPEGTS
             if (bytes.Count < pos + 2)
                 return;
 
-            while (pos < bytes.Count)
+            ID = bytes[pos];
+
+            // read next 2 bytes
+            var tableHeader1 = bytes[pos + 1];
+            var tableHeader2 = bytes[pos + 2];
+
+            SectionSyntaxIndicator = ((tableHeader1 & 128) == 128);
+            Private = ((tableHeader1 & 64) == 64);
+            Reserved = Convert.ToByte((tableHeader1 & 48) >> 4);
+            SectionLength = Convert.ToInt32(((tableHeader1 & 15) << 8) + tableHeader2);
+
+            Data = new byte[SectionLength];
+            CRC = new byte[4];
+
+            Data[0] = 0;
+            bytes.CopyTo(pointerField + 1, Data, 1, SectionLength - 1);
+            bytes.CopyTo(pointerField + SectionLength, CRC, 0, 4);
+
+            pos = pos + 3; // header
+            TableIdExt = (bytes[pos + 0] << 8) + bytes[pos + 1];
+
+
+            var posAfterTable = pos + SectionLength - 4;
+            pos = pos + 2;
+
+            Version = Convert.ToByte((bytes[pos + 0] & 64) >> 1);
+            CurrentIndicator = (bytes[pos + 0] & 1) == 1;
+
+            SectionNumber = bytes[pos + 1];
+            LastSectionNumber = bytes[pos + 2];
+
+            pos = pos + 3;
+
+            while (pos< posAfterTable)
             {
-                var tableID = bytes[pos];
-                if (tableID == 0xFF)
-                    break;
+                var programNum = Convert.ToInt32(((bytes[pos+0]) << 8) + (bytes[pos + 1]));
+                var programPID = Convert.ToInt32(((bytes[pos + 2] & 31) << 8) + (bytes[pos + 3]));
 
-                // read next 2 bytes
-                var tableHeader1 = bytes[pos + 1];
-                var tableHeader2 = bytes[pos + 2];
-
-                var sectionSyntaxIndicator = ((tableHeader1 & 128) == 128);
-                //Private = ((tableHeader1 & 64) == 64);
-                //Reserved = Convert.ToByte((tableHeader1 & 48) >> 4);
-                var sectionLength = Convert.ToInt32(((tableHeader1 & 15) << 8) + tableHeader2);
-
-                var tableData = new byte[sectionLength];
-                var crc = new byte[4];
-
-                tableData[0] = 0;
-                bytes.CopyTo(pos+1, tableData, 1, sectionLength-1);
-                bytes.CopyTo(pos + sectionLength - 1, crc, 0, 4);
-
-                if (tableID == 0)
+                ProgramAssociations.Add(new ProgramAssociation()
                 {
-                    // PAT
-                    //ParsePAT(tableData);
+                    ProgramNumber = programNum,
+                    ProgramMapPID = programPID
+                });
 
-                    ID = 0;
-                    Data = tableData;
-                    CRC = crc;
-                }
-
-                pos += sectionLength + 4; // Data + CRC
+                pos +=4;
             }
         }
 

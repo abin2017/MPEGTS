@@ -156,6 +156,64 @@ namespace Tests
         }
 
         [TestMethod]
+        public void TestSDTCA1()
+        {
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}SDT.CA1.bin");
+
+            var packet = MPEGTransportStreamPacket.Parse(packetBytes);
+            var SDT = DVBTTable.CreateFromPackets<SDTTable>(packet, 17);
+
+            Assert.IsNotNull(SDT);
+            Assert.IsTrue(SDT.CRCIsValid());
+
+            Assert.AreEqual(SDT.ServiceDescriptors.Count, 18);
+
+            var descriptorsDict = new Dictionary<int, ServiceDescriptor>();
+            foreach (var decriptor in SDT.ServiceDescriptors)
+            {
+                descriptorsDict.Add(decriptor.ProgramNumber, decriptor);
+            }
+
+            Assert.AreEqual("Towercom", descriptorsDict[4001].ProviderName);
+            Assert.AreEqual("JOJ HD", descriptorsDict[4001].ServiceName);
+            Assert.IsFalse(descriptorsDict[4001].Free);
+
+            Assert.AreEqual("Towercom", descriptorsDict[4008].ProviderName);
+            Assert.AreEqual("Prima Cool SK", descriptorsDict[4008].ServiceName);
+            Assert.IsTrue(descriptorsDict[4008].Free);
+        }
+
+        [TestMethod]
+        public void TestSDTCA2()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}SDT.CA2.bin");
+
+            var packet = MPEGTransportStreamPacket.Parse(packetBytes);
+            var SDT = DVBTTable.CreateFromPackets<SDTTable>(packet, 17);
+
+            Assert.IsNotNull(SDT);
+            Assert.IsTrue(SDT.CRCIsValid());
+
+            Assert.AreEqual(SDT.ServiceDescriptors.Count, 16);
+
+            var descriptorsDict = new Dictionary<int, ServiceDescriptor>();
+            foreach (var decriptor in SDT.ServiceDescriptors)
+            {
+                descriptorsDict.Add(decriptor.ProgramNumber, decriptor);
+            }
+
+            Assert.AreEqual("ORF", descriptorsDict[14107].ProviderName);
+            Assert.AreEqual("ORF1", descriptorsDict[14107].ServiceName);
+            Assert.IsTrue(descriptorsDict[14107].Free);
+
+            Assert.AreEqual("ORF", descriptorsDict[14101].ProviderName);
+            Assert.AreEqual("ORF1 HD", descriptorsDict[14101].ServiceName);
+            Assert.IsFalse(descriptorsDict[14101].Free);
+        }
+
+        [TestMethod]
         public void TestPMT()
         {
             var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}PMT.bin");
@@ -203,7 +261,5 @@ namespace Tests
 
             Assert.AreEqual(new DateTime(2023, 09, 03, 12, 31, 29), TDT.UTCTime);
         }
-
-
     }
 }

@@ -49,7 +49,7 @@ namespace MPEGTS
 
         public void WriteToConsole(bool detailed = false)
         {
-            Console.WriteLine(WriteToString(detailed));
+            Console.Write(WriteToString(detailed));
         }
 
         public string WriteToString(bool detailed = false)

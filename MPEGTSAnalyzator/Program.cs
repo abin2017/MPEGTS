@@ -99,7 +99,12 @@ namespace MPEGTSAnalyzator
                 sDTTable = DVBTTable.CreateFromPackets<SDTTable>(packetsByPID[17], 17);  // PID 0x11, Service Description Table (SDT)
 
                 if (sDTTable != null)
+                {
                     sDTTable.WriteToConsole();
+
+                    //saving packets fo future analyzation/tests
+                    //MPEGTransportStreamPacket.SavePacketsToFile(packetsByPID[17], $"c:\\temp\\SDT.CA2.bin");
+                }
             }
 
             if (packetsByPID.ContainsKey(16))
@@ -175,13 +180,6 @@ namespace MPEGTSAnalyzator
                         if (pmtTable != null)
                         {
                             pmtTable.WriteToConsole();
-
-
-                            //saving packets fo future analyzation/tests
-
-                            var PMTPackets = packetsByPID[kvp.Value];
-                            MPEGTransportStreamPacket.SavePacketsToFile(PMTPackets, $"c:\\temp\\pmtPackests-{kvp.Value}.bin");
-
                         }
                     }
 
