@@ -99,7 +99,12 @@ namespace MPEGTSAnalyzator
                 sDTTable = DVBTTable.CreateFromPackets<SDTTable>(packetsByPID[17], 17);  // PID 0x11, Service Description Table (SDT)
 
                 if (sDTTable != null)
+                {
                     sDTTable.WriteToConsole();
+
+                    //saving packets fo future analyzation/tests
+                    MPEGTransportStreamPacket.SavePacketsToFile(packetsByPID[17], $"c:\\temp\\SDT.CA3.bin");
+                }
             }
 
             if (packetsByPID.ContainsKey(16))

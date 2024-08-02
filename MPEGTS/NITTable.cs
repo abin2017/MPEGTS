@@ -178,6 +178,7 @@ namespace MPEGTS
                 sb.AppendLine($"LinkageType            : {LinkageType}");
             }
 
+            sb.AppendLine("");
             sb.AppendLine($"NetworkName            : {NetworkName}");
             sb.AppendLine($"TransportStreamId      : {TransportStreamId}");
             sb.AppendLine($"OriginalNetworkId      : {OriginalNetworkId}");

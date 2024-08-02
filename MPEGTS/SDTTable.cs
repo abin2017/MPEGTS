@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using static System.Collections.Specialized.BitVector32;
 
 namespace MPEGTS
 {
@@ -73,11 +74,11 @@ namespace MPEGTS
                 }
             } else
             {
-                sb.AppendLine($"{"Type",4} {"Provider".PadRight(20, ' '),20} {"ServiceName".PadRight(40, ' '),40} {"Program Number"}");
-                sb.AppendLine($"{"----",4} {"--------".PadRight(20, '-'),20} {"-----------".PadRight(40, '-'),40} {"--------------"}");
+                sb.AppendLine($"{"Type",4} {"Free",4} {"Provider".PadRight(20, ' '),20} {"ServiceName".PadRight(40, ' '),40} {"Program Number"}");
+                sb.AppendLine($"{"----",4} {"----",4} {"--------".PadRight(20, '-'),20} {"-----------".PadRight(40, '-'),40} {"--------------"}");
                 foreach (var desc in ServiceDescriptors)
                 {
-                    sb.AppendLine($"{desc.ServisType,4} {desc.ProviderName.PadRight(20, ' '),20} {desc.ServiceName.PadRight(40,' '),40} {desc.ProgramNumber,14}");
+                    sb.AppendLine($"{desc.ServisType,4} {(desc.Free ? "y" : "n"),4} {desc.ProviderName.PadRight(20, ' '),20} {desc.ServiceName.PadRight(40,' '),40} {desc.ProgramNumber,14}");
                 }
             }
 
@@ -146,15 +147,21 @@ namespace MPEGTS
 
             while (pos< posAfterTable)
             {
-                var programNumber = ((bytes[pos + 0]) << 8) + bytes[pos + 1];
+                //  2 bytes
 
+                var programNumber = ((bytes[pos + 0]) << 8) + bytes[pos + 1];  // Table 5: Service description section in ETSI EN 300 468 V1.15.1(2016 - 03
+
+                //  1 byte
                 // reserved_future_use
                 // EIT_schedule_flag
                 // EIT_present_following_flag
-                // unning_status 3 uimsbf
-                // free_CA_mode
 
                 pos = pos + 3;
+
+                // rnning_status 3 uimsbf  // [11100000]
+                // free_CA_mode            // [00010000]
+
+                var freeCAmode = (bytes[pos] & 16) != 16;
 
                 var descriptorLoopLength = ((bytes[pos + 0] & 15) << 8) + bytes[pos + 1];
 
@@ -164,7 +171,6 @@ namespace MPEGTS
 
                 while (pos < posAfterdescriptorLoopLength)
                 {
-
                     var descriptorTag = bytes[pos + 0];
                     var descriptorLength = bytes[pos + 1];
                     var descriptorBytes = new byte[descriptorLength + 2]; // descriptorLength + descriptorTag + descriptorLength
@@ -172,7 +178,7 @@ namespace MPEGTS
 
                     if (descriptorTag == 0x48) // service_descriptor
                     {
-                        var serviceDescriptor = new ServiceDescriptor(descriptorBytes, programNumber, NetworkID);
+                        var serviceDescriptor = new ServiceDescriptor(descriptorBytes, programNumber, NetworkID, freeCAmode);
                         ServiceDescriptors.Add(serviceDescriptor);
                     } else
                     {

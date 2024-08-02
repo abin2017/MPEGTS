@@ -17,6 +17,8 @@ namespace MPEGTS
             if (bytes == null || bytes.Count < 5)
                 return;
 
+            //MPEGTransportStreamPacket.WriteByteArrayToConsole(bytes.ToArray());
+
             var pointerField = bytes[0];
             var pos = 1;
 
@@ -46,12 +48,11 @@ namespace MPEGTS
             bytes.CopyTo(pointerField + 1, Data, 1, SectionLength - 1);
             bytes.CopyTo(pointerField + SectionLength, CRC, 0, 4);
 
-            pos = pos + 3;
-
-            var posAfterTable = pos + SectionLength - 4;
-
+            pos = pos + 3; // header
             TableIdExt = (bytes[pos + 0] << 8) + bytes[pos + 1];
 
+
+            var posAfterTable = pos + SectionLength - 4;
             pos = pos + 2;
 
             Version = Convert.ToByte((bytes[pos + 0] & 64) >> 1);
