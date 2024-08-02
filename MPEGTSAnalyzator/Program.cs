@@ -103,7 +103,7 @@ namespace MPEGTSAnalyzator
                     sDTTable.WriteToConsole();
 
                     //saving packets fo future analyzation/tests
-                    //MPEGTransportStreamPacket.SavePacketsToFile(packetsByPID[17], $"c:\\temp\\SDT.CA2.bin");
+                    MPEGTransportStreamPacket.SavePacketsToFile(packetsByPID[17], $"c:\\temp\\SDT.CA3.bin");
                 }
             }
 

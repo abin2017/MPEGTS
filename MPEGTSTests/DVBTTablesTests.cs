@@ -214,6 +214,36 @@ namespace Tests
         }
 
         [TestMethod]
+        public void TestSDTCA3()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}SDT.CA3.bin");
+
+            var packet = MPEGTransportStreamPacket.Parse(packetBytes);
+            var SDT = DVBTTable.CreateFromPackets<SDTTable>(packet, 17);
+
+            Assert.IsNotNull(SDT);
+            Assert.IsTrue(SDT.CRCIsValid());
+
+            Assert.AreEqual(SDT.ServiceDescriptors.Count, 13);
+
+            var descriptorsDict = new Dictionary<int, ServiceDescriptor>();
+            foreach (var decriptor in SDT.ServiceDescriptors)
+            {
+                descriptorsDict.Add(decriptor.ProgramNumber, decriptor);
+            }
+
+            Assert.AreEqual("ORF", descriptorsDict[14801].ProviderName);
+            Assert.AreEqual("ProSieben HD", descriptorsDict[14801].ServiceName);
+            Assert.IsFalse(descriptorsDict[14801].Free);
+
+            Assert.AreEqual("ORS", descriptorsDict[14806].ProviderName);
+            Assert.AreEqual("4MEDIATHEK", descriptorsDict[14806].ServiceName);
+            Assert.IsTrue(descriptorsDict[14806].Free);
+        }
+
+        [TestMethod]
         public void TestPMT()
         {
             var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}PMT.bin");
