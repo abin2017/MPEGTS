@@ -12,7 +12,13 @@ namespace MPEGTS
     public class PMTTable : DVBTTable
     {
         public List<ElementaryStreamSpecificData> Streams { get; set; } = new List<ElementaryStreamSpecificData>();
+        public List<ElementaryStreamSpecificData> Audio { get; set; } = new List<ElementaryStreamSpecificData>();
+        public List<ElementaryStreamSpecificData> Video { get; set; } = new List<ElementaryStreamSpecificData>();
+
+        public ElementaryCasDescriptor CasInfo = new ElementaryCasDescriptor();
         public long PCRPID { get; set; }
+
+        
 
         public override void Parse(List<byte> bytes)
         {
@@ -70,9 +76,36 @@ namespace MPEGTS
             pos = pos + 2;
 
             var programInfoLength = Convert.ToInt32(((bytes[pos+0] & 3) << 8) + bytes[pos + 1]);
-
             pos = pos + 2;
+            var programInfoBytes = new byte[programInfoLength];
+            var cnt = 0;
 
+            
+            bytes.CopyTo(pos, programInfoBytes, 0, programInfoLength);
+            
+            while (cnt < programInfoLength) {
+                var descriptorTag = programInfoBytes[cnt + 0];
+                var descriptorLength = programInfoBytes[cnt + 1];
+
+                if (descriptorTag == 0x9)
+                {
+                    var idx = 0;
+
+                    idx++;
+                    //skip desc len
+                    idx++;
+
+                    var ca_sys_id = Convert.ToInt32((programInfoBytes[cnt + idx] << 8) + programInfoBytes[cnt + idx + 1]);
+                    cnt += 2;
+                    var ecm_pid = Convert.ToInt32(((programInfoBytes[cnt + idx] & 0x1F) << 8) + programInfoBytes[cnt + idx + 1]);
+                    cnt += 2;
+
+                    CasInfo.Add(ca_sys_id, ecm_pid);
+                }
+                cnt += descriptorLength;
+            }
+
+            
             // skipping program info
             pos += programInfoLength;
 
@@ -117,6 +150,21 @@ namespace MPEGTS
                         stream.LangugeAndAudioType = MPEGTSCharReader.ReadString(descriptorBytes, 2, descriptorLength);
                     }
                     else
+                    if (descriptorTag == 0x9) {
+                        cnt = 0;
+
+                        cnt++;
+                        //skip desc len
+                        cnt++;
+
+                        var ca_sys_id = Convert.ToInt32((descriptorBytes[cnt] << 8) + descriptorBytes[cnt + 1]);
+                        cnt += 2;
+                        var ecm_pid = Convert.ToInt32((descriptorBytes[cnt] << 8) + descriptorBytes[cnt + 1]);
+                        cnt += 2;
+
+                        CasInfo.Add(ca_sys_id, ecm_pid);
+                    }
+                    else
                     {
                         // TODO - read other descriptors
                         //Console.WriteLine($"PMT: unknown tag descriptor: {descriptorTag:X} hex ({descriptorTag} dec)");
@@ -124,6 +172,17 @@ namespace MPEGTS
                 }
 
                 pos += stream.ESInfoLength;
+            }
+
+            foreach (var stream in Streams) {
+                if (stream.IsVideo) {
+                    Video.Add(stream);
+                }
+
+                if (stream.IsAudio)
+                {
+                    Audio.Add(stream);
+                }
             }
         }
 

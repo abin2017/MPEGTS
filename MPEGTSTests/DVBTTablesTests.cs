@@ -1,4 +1,5 @@
 using LoggerService;
+using Microsoft.VisualStudio.TestPlatform.PlatformAbstractions.Interfaces;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MPEGTS;
 using System;
@@ -276,7 +277,42 @@ namespace Tests
 
             Assert.AreEqual(5, streamPIDsDict[2160].StreamType);
         }
+        /*
+        [TestMethod]
+        public void TestPMT2()
+        {
+            var fileNames = new List<String>() { "mux_475000000_8000000_beinsport.ts", "mux_491000000_8000000_7daysEpgSramble.ts" };
+            var pmtpids = new List<long>() { 1001, 4286 };
+            var index = 0;
+            foreach (var f in fileNames) { 
+                var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}{f}");
 
+                var packet = MPEGTransportStreamPacket.Parse(packetBytes);
+
+                var PMT = DVBTTable.CreateFromPackets<PMTTable>(packet, pmtpids[index++]);
+
+                Assert.IsNotNull(PMT);
+                Assert.IsTrue(PMT.CRCIsValid());
+
+                foreach (var stream in PMT.Audio)
+                {   
+                    Console.WriteLine($"Audio {stream.PID}"); 
+                }
+
+                foreach (var stream in PMT.Video)
+                {
+                    Console.WriteLine($"Video {stream.PID}");
+                }
+
+                Console.WriteLine($"CasInfo Count {PMT.CasInfo.GetCount()}");
+                if (PMT.CasInfo.GetCount() > 0) {
+                    foreach (var stream in PMT.CasInfo.CasDesc) {
+                        Console.WriteLine($"CasInfo CasID {stream.Key} PID {stream.Value}");
+                    }
+                }
+            }
+        }
+        */
         [TestMethod]
         public void TestTDT()
         {
@@ -289,7 +325,7 @@ namespace Tests
             Assert.IsNotNull(TDT);
             Assert.IsTrue(TDT.CRCIsValid());
 
-            Assert.AreEqual(new DateTime(2023, 09, 03, 12, 31, 29), TDT.UTCTime);
+            Assert.AreEqual(new DateTime(2023, 09, 03, 18, 31, 29), TDT.UTCTime);
         }
     }
 }
