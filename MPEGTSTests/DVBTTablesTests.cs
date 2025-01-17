@@ -327,5 +327,24 @@ namespace Tests
 
             Assert.AreEqual(new DateTime(2023, 09, 03, 18, 31, 29), TDT.UTCTime);
         }
+
+        /*
+        [TestMethod]
+        public void TestCAT()
+        {
+            var packetBytes = File.ReadAllBytes($"TestData{Path.DirectorySeparatorChar}mux_491000000_8000000_7daysEpgSramble.ts");
+
+            var packet = MPEGTransportStreamPacket.Parse(packetBytes);
+
+            var CAT = DVBTTable.CreateFromPackets<CATTable>(packet, 1);
+
+            Assert.IsNotNull(CAT);
+            Assert.IsTrue(CAT.CRCIsValid());
+
+
+            CAT.WriteToConsole();
+        }
+        */
     }
+
 }
